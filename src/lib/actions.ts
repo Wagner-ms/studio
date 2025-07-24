@@ -30,7 +30,7 @@ async function ensureProductNameExists(productName: string) {
 }
 
 
-export async function addProductAction(formData: FormData) {
+export async function addProductAction(formData: FormData): Promise<{ success: boolean; error?: string }> {
   const data = {
     nome: formData.get('nome'),
     lote: formData.get('lote'),
@@ -40,10 +40,9 @@ export async function addProductAction(formData: FormData) {
   const parsed = ProductSchema.safeParse(data);
 
   if (!parsed.success) {
-    // Manually structure the error to ensure a simple, serializable object is returned.
-    const fieldErrors = parsed.error.flatten().fieldErrors;
-    const formError = fieldErrors._form?.[0] ?? 'Verifique os campos do formulário.';
-    return { success: false, error: { _form: [formError] } };
+    // Return a simple, serializable error message
+    const firstError = parsed.error.errors[0]?.message || 'Verifique os campos do formulário.';
+    return { success: false, error: firstError };
   }
 
   try {
@@ -81,7 +80,7 @@ export async function addProductAction(formData: FormData) {
     if (error instanceof Error) {
         errorMessage = error.message;
     }
-    return { success: false, error: { _form: [errorMessage] } };
+    return { success: false, error: errorMessage };
   }
 }
 

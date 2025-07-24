@@ -161,7 +161,7 @@ export default function AddProductPage() {
       toast({
         variant: 'destructive',
         title: 'Erro ao salvar',
-        description: result?.error?._form?.[0] || 'Algo deu errado. Verifique os campos.',
+        description: result?.error || 'Algo deu errado. Verifique os campos.',
       });
       setIsSubmitting(false);
     }
