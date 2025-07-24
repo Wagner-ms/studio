@@ -5,12 +5,14 @@ import { addDoc, collection, Timestamp, deleteDoc, doc, query, where, getDocs, w
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './firebase';
 import { revalidatePath } from 'next/cache';
-import { parse } from 'date-fns';
+import { parse, isValid } from 'date-fns';
 
 const ProductSchema = z.object({
   nome: z.string().trim().min(1, 'O nome do produto é obrigatório'),
   lote: z.string().trim().min(1, 'O número do lote é obrigatório'),
-  validade: z.string().min(1, 'A data de validade é obrigatória'),
+  validade: z.string().refine((val) => val && isValid(parse(val, 'yyyy-MM-dd', new Date())), {
+    message: 'Data de validade inválida.',
+  }),
 });
 
 async function ensureProductNameExists(productName: string) {
@@ -31,22 +33,23 @@ async function ensureProductNameExists(productName: string) {
 
 
 export async function addProductAction(formData: FormData): Promise<{ success: boolean; error?: string }> {
-  const data = {
+  const rawData = {
     nome: formData.get('nome'),
     lote: formData.get('lote'),
     validade: formData.get('validade'),
   };
 
-  const parsed = ProductSchema.safeParse(data);
+  const parsed = ProductSchema.safeParse(rawData);
 
   if (!parsed.success) {
-    // Return a simple, serializable error message
     const firstError = parsed.error.errors[0]?.message || 'Verifique os campos do formulário.';
     return { success: false, error: firstError };
   }
 
   try {
-    await ensureProductNameExists(parsed.data.nome);
+    const { nome, lote, validade } = parsed.data;
+    
+    await ensureProductNameExists(nome);
 
     let fotoEtiqueta = '';
     const imageFile = formData.get('fotoEtiqueta') as File | null;
@@ -57,10 +60,12 @@ export async function addProductAction(formData: FormData): Promise<{ success: b
       fotoEtiqueta = await getDownloadURL(uploadResult.ref);
     }
     
-    const validadeDate = parse(parsed.data.validade, 'yyyy-MM-dd', new Date());
+    // Convert string to Date, then to Firestore Timestamp inside the action
+    const validadeDate = parse(validade, 'yyyy-MM-dd', new Date());
 
     const newProduct = {
-      ...parsed.data,
+      nome,
+      lote,
       validade: Timestamp.fromDate(validadeDate),
       fotoEtiqueta,
       criadoEm: Timestamp.now(),
