@@ -74,20 +74,29 @@ export function ProductCard({ product }: { product: Product }) {
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    const result = await deleteProductAction(product.id);
-    
-    if (result.success) {
-      toast({
-        title: 'Produto excluído!',
-        description: `${product.nome} foi removido com sucesso.`,
-      });
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao excluir',
-        description: result.error || 'Não foi possível remover o produto. Tente novamente.',
-      });
-      setIsDeleting(false);
+    try {
+        const result = await deleteProductAction(product.id);
+        
+        if (result.success) {
+          toast({
+            title: 'Produto excluído!',
+            description: `${product.nome} foi removido com sucesso.`,
+          });
+        } else {
+          toast({
+            variant: 'destructive',
+            title: 'Erro ao excluir',
+            description: result.error || 'Não foi possível remover o produto. Tente novamente.',
+          });
+        }
+    } catch (error) {
+         toast({
+            variant: 'destructive',
+            title: 'Erro ao excluir',
+            description: 'Ocorreu um erro inesperado. Tente novamente.',
+          });
+    } finally {
+        setIsDeleting(false);
     }
   };
 
@@ -124,7 +133,7 @@ export function ProductCard({ product }: { product: Product }) {
                  <Image
                     src={product.fotoEtiqueta}
                     alt={`Etiqueta para ${product.nome}`}
-                    layout="fill"
+                    fill
                     objectFit="contain"
                     data-ai-hint="product label"
                   />
