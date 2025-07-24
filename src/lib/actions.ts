@@ -5,13 +5,12 @@ import { addDoc, collection, Timestamp, deleteDoc, doc, query, where, getDocs, w
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './firebase';
 import { revalidatePath } from 'next/cache';
-import { parse, isValid } from 'date-fns';
 
 const ProductSchema = z.object({
   nome: z.string().trim().min(1, 'O nome do produto é obrigatório'),
   lote: z.string().trim().min(1, 'O número do lote é obrigatório'),
-  validade: z.string().refine((val) => val && isValid(parse(val, 'yyyy-MM-dd', new Date())), {
-    message: 'Data de validade inválida.',
+  validade: z.string().refine((val) => /^\d{4}-\d{2}-\d{2}$/.test(val), {
+    message: 'Data de validade inválida. Use o formato AAAA-MM-DD.',
   }),
 });
 
@@ -42,8 +41,7 @@ export async function addProductAction(formData: FormData): Promise<{ success: b
   const parsed = ProductSchema.safeParse(rawData);
 
   if (!parsed.success) {
-    const firstError = parsed.error.errors[0]?.message || 'Verifique os campos do formulário.';
-    return { success: false, error: firstError };
+    return { success: false, error: parsed.error.errors[0].message };
   }
 
   try {
@@ -60,7 +58,8 @@ export async function addProductAction(formData: FormData): Promise<{ success: b
       fotoEtiqueta = await getDownloadURL(uploadResult.ref);
     }
     
-    const validadeDate = parse(validade, 'yyyy-MM-dd', new Date());
+    const [year, month, day] = validade.split('-').map(Number);
+    const validadeDate = new Date(year, month - 1, day);
 
     const newProduct = {
       nome,
@@ -88,19 +87,19 @@ export async function addProductAction(formData: FormData): Promise<{ success: b
   }
 }
 
-export async function deleteProductAction(productId: string) {
+export async function deleteProductAction(productId: string): Promise<{ success: boolean; error?: string }> {
     if (!productId) {
-        throw new Error('ID do produto não fornecido.');
+        return { success: false, error: 'ID do produto não fornecido.' };
     }
-
     try {
         const productRef = doc(db, 'produtos', productId);
         await deleteDoc(productRef);
         revalidatePath('/dashboard');
         revalidatePath('/notifications');
         revalidatePath('/reports');
+        return { success: true };
     } catch (error) {
         console.error("Error deleting product:", error);
-        throw new Error('Falha ao deletar o produto.');
+        return { success: false, error: 'Falha ao deletar o produto.' };
     }
 }
