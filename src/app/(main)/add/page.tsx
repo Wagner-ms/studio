@@ -141,30 +141,40 @@ export default function AddProductPage() {
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsSubmitting(true);
-    const formData = new FormData();
-    if (data.fotoEtiqueta instanceof File) {
-      formData.append('fotoEtiqueta', data.fotoEtiqueta);
-    }
-    formData.append('nome', data.nome);
-    formData.append('lote', data.lote);
-    formData.append('validade', data.validade);
+    try {
+        const formData = new FormData();
+        if (data.fotoEtiqueta instanceof File) {
+          formData.append('fotoEtiqueta', data.fotoEtiqueta);
+        }
+        formData.append('nome', data.nome);
+        formData.append('lote', data.lote);
+        formData.append('validade', data.validade);
 
-    const result = await addProductAction(formData);
+        const result = await addProductAction(formData);
 
-    if (result.success) {
-      toast({
-        title: 'Produto adicionado!',
-        description: `${data.nome} foi salvo com sucesso.`,
-      });
-      router.push('/dashboard');
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao salvar',
-        description: result.error,
-      });
+        if (result.success) {
+          toast({
+            title: 'Produto adicionado!',
+            description: `${data.nome} foi salvo com sucesso.`,
+          });
+          router.push('/dashboard');
+        } else {
+          toast({
+            variant: 'destructive',
+            title: 'Erro ao salvar',
+            description: result.error,
+          });
+        }
+    } catch (error) {
+        console.error("Erro inesperado no formulário:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Erro inesperado',
+            description: 'Ocorreu um erro inesperado. Tente novamente.',
+        });
+    } finally {
+        setIsSubmitting(false);
     }
-     setIsSubmitting(false);
   };
 
   const filteredProductNames = productNames.filter(p => p.nome.toLowerCase().includes(inputValue.toLowerCase()));
