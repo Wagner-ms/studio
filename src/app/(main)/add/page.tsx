@@ -14,6 +14,7 @@ import { addProductAction } from '@/lib/actions';
 import { Camera, Loader2, Save, Wand2 } from 'lucide-react';
 import Image from 'next/image';
 import { extractProductDetails } from '@/ai/flows/extract-product-details';
+import { isValid, parseISO } from 'date-fns';
 
 const FormSchema = z.object({
   nome: z.string().min(1, 'O nome do produto é obrigatório'),
@@ -76,7 +77,20 @@ export default function AddProductPage() {
           const result = await extractProductDetails({ photoDataUri });
           form.setValue('nome', result.productName, { shouldValidate: true });
           form.setValue('lote', result.lotNumber, { shouldValidate: true });
-          form.setValue('validade', result.expirationDate, { shouldValidate: true });
+
+          // Validate date before setting
+          const parsedDate = parseISO(result.expirationDate);
+          if (isValid(parsedDate)) {
+             form.setValue('validade', result.expirationDate, { shouldValidate: true });
+          } else {
+            form.setValue('validade', '', { shouldValidate: true }); // Clear if invalid
+             toast({
+                variant: 'destructive',
+                title: 'Data de Validade Inválida',
+                description: 'A IA não conseguiu extrair uma data válida. Por favor, insira manualmente.',
+             });
+          }
+
           toast({
             title: 'Detalhes extraídos!',
             description: 'Os detalhes do produto foram preenchidos a partir da imagem.',
