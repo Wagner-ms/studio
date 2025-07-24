@@ -59,7 +59,7 @@ export async function addProductAction(formData: FormData): Promise<{ success: b
     }
     
     const [year, month, day] = validade.split('-').map(Number);
-    const validadeDate = new Date(year, month - 1, day);
+    const validadeDate = new Date(Date.UTC(year, month - 1, day));
 
     const newProduct = {
       nome,
