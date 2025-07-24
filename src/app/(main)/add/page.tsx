@@ -128,7 +128,7 @@ export default function AddProductPage() {
       toast({
         variant: 'destructive',
         title: 'Falha no OCR',
-        description: 'Não foi possível extrair os detalhes da imagem. Por favor, preencha manualmente.',
+        description: 'Não foi possível extrair os detalhes da imagem. Por favor, preencha manually.',
       });
     } finally {
       setIsOcrLoading(false);
@@ -234,7 +234,7 @@ export default function AddProductPage() {
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                   <Command>
                     <CommandInput 
-                      placeholder="Buscar nome do produto..."
+                      placeholder="Busque ou crie um novo produto..."
                       onValueChange={(search) => form.setValue('nome', search)}
                      />
                     <CommandEmpty>Nenhum produto encontrado.</CommandEmpty>
