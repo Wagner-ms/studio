@@ -21,8 +21,22 @@ import {
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn, formatDate, getExpirationStatus } from '@/lib/utils';
-import { AlertTriangle, CheckCircle2, Eye, FileQuestion, Tag, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Eye, FileQuestion, Tag, Trash2, XCircle } from 'lucide-react';
 import type { ExpirationStatus } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { deleteProductAction } from '@/lib/actions';
+import { useToast } from '@/hooks/use-toast';
+import * as React from 'react';
 
 const statusStyles: Record<ExpirationStatus, {
   icon: React.ElementType,
@@ -54,6 +68,27 @@ export function ProductCard({ product }: { product: Product }) {
   const expirationDate = product.validade.toDate();
   const status = getExpirationStatus(expirationDate);
   const { icon: Icon, badgeVariant, cardClass, text } = statusStyles[status];
+  const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteProductAction(product.id);
+      toast({
+        title: 'Produto excluído!',
+        description: `${product.nome} foi removido com sucesso.`,
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao excluir',
+        description: 'Não foi possível remover o produto. Tente novamente.',
+      });
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <Card className={cn('transition-all', cardClass)}>
@@ -72,7 +107,7 @@ export function ProductCard({ product }: { product: Product }) {
           Vence em: <span className="font-medium text-foreground">{formatDate(expirationDate)}</span>
         </p>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex gap-2">
         <Dialog>
           <DialogTrigger asChild>
             <Button variant="outline" className="w-full" disabled={!product.fotoEtiqueta}>
@@ -101,6 +136,30 @@ export function ProductCard({ product }: { product: Product }) {
             </div>
           </DialogContent>
         </Dialog>
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" size="icon" disabled={isDeleting}>
+              <Trash2 />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta ação não pode ser desfeita. Isso excluirá permanentemente o produto
+                "{product.nome}".
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+                {isDeleting ? 'Excluindo...' : 'Excluir'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
       </CardFooter>
     </Card>
   );

@@ -1,8 +1,8 @@
 'use server';
 
 import { z } from 'zod';
-import { addDoc, collection, Timestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { addDoc, collection, Timestamp, deleteDoc, doc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from './firebase';
 import { revalidatePath } from 'next/cache';
 
@@ -56,4 +56,21 @@ export async function addProductAction(formData: FormData) {
     }
     return { success: false, error: { _form: [errorMessage] } };
   }
+}
+
+export async function deleteProductAction(productId: string) {
+    if (!productId) {
+        throw new Error('ID do produto não fornecido.');
+    }
+
+    try {
+        const productRef = doc(db, 'produtos', productId);
+        await deleteDoc(productRef);
+        revalidatePath('/dashboard');
+        // Note: Image deletion from storage is not implemented
+        // to keep it simple, but could be added here.
+    } catch (error) {
+        console.error("Error deleting product:", error);
+        throw new Error('Falha ao deletar o produto.');
+    }
 }
