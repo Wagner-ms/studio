@@ -74,29 +74,23 @@ export function ProductCard({ product }: { product: Product }) {
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    try {
-        const result = await deleteProductAction(product.id);
-        if (result.success) {
-            toast({
-              title: 'Produto excluído!',
-              description: `${product.nome} foi removido com sucesso.`,
-            });
-        } else {
-             toast({
-                variant: 'destructive',
-                title: 'Erro ao excluir',
-                description: result.error || 'Ocorreu um erro inesperado. Tente novamente.',
-              });
-        }
-    } catch(e) {
+    const result = await deleteProductAction(product.id);
+
+    if (result.success) {
         toast({
+          title: 'Produto excluído!',
+          description: `${product.nome} foi removido com sucesso.`,
+        });
+        // A revalidação do path no servidor cuidará de remover o card da UI.
+    } else {
+         toast({
             variant: 'destructive',
             title: 'Erro ao excluir',
-            description: 'Ocorreu um erro inesperado. Tente novamente.',
-        });
-    } finally {
-        setIsDeleting(false);
+            description: result.error,
+          });
     }
+    // Sempre define isDeleting como false no final, seja sucesso ou falha
+    setIsDeleting(false);
   };
 
   return (

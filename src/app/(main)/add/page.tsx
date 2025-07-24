@@ -15,7 +15,7 @@ import { Camera, Check, ChevronsUpDown, Loader2, PlusCircle, Save, Wand2 } from 
 import Image from 'next/image';
 import { extractProductDetails } from '@/ai/flows/extract-product-details';
 import { isValid, parse, parseISO } from 'date-fns';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, setDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { ProductName } from '@/lib/types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils';
 const FormSchema = z.object({
   nome: z.string().min(1, 'O nome do produto é obrigatório'),
   lote: z.string().min(1, 'O número do lote é obrigatório'),
-  validade: z.string().refine((val) => val && isValid(parse(val, 'yyyy-MM-dd', new Date())), {
+  validade: z.string().refine((val) => val && /^\d{4}-\d{2}-\d{2}$/.test(val) && isValid(parse(val, 'yyyy-MM-dd', new Date())), {
     message: 'Data inválida. Use o formato AAAA-MM-DD.',
   }),
   fotoEtiqueta: z.any().optional(),
@@ -151,7 +151,7 @@ export default function AddProductPage() {
 
     const result = await addProductAction(formData);
 
-    if (result?.success) {
+    if (result.success) {
       toast({
         title: 'Produto adicionado!',
         description: `${data.nome} foi salvo com sucesso.`,
@@ -161,16 +161,16 @@ export default function AddProductPage() {
       toast({
         variant: 'destructive',
         title: 'Erro ao salvar',
-        description: result?.error || 'Algo deu errado. Verifique os campos.',
+        description: result.error, // Exibe o erro padronizado retornado pela Server Action
       });
-      setIsSubmitting(false);
     }
+     setIsSubmitting(false);
   };
 
   const filteredProductNames = productNames.filter(p => p.nome.toLowerCase().includes(inputValue.toLowerCase()));
   const isNewProduct = inputValue && !productNames.some(p => p.nome.toLowerCase() === inputValue.toLowerCase());
 
-  const selectedProductName = form.getValues('nome');
+  const selectedProductName = form.watch('nome');
 
   return (
     <div className="max-w-2xl mx-auto">

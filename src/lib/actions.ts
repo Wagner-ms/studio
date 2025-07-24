@@ -6,14 +6,17 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './firebase';
 import { revalidatePath } from 'next/cache';
 
-const ProductSchema = z.object({
+// Schema para validação dos dados do formulário de produto
+const ProductFormSchema = z.object({
   nome: z.string().trim().min(1, 'O nome do produto é obrigatório'),
   lote: z.string().trim().min(1, 'O número do lote é obrigatório'),
   validade: z.string().refine((val) => /^\d{4}-\d{2}-\d{2}$/.test(val), {
-    message: 'Data de validade inválida. Use o formato AAAA-MM-DD.',
+    message: 'A data de validade deve estar no formato AAAA-MM-DD.',
   }),
 });
 
+// Função auxiliar para garantir que um nome de produto exista na coleção 'nomesDeProdutos'.
+// Evita duplicação e mantém a consistência.
 async function ensureProductNameExists(productName: string) {
     const trimmedName = productName.trim();
     if (!trimmedName) return;
@@ -23,14 +26,16 @@ async function ensureProductNameExists(productName: string) {
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
-        const batch = writeBatch(db);
         const newNameRef = doc(collection(db, 'nomesDeProdutos'));
-        batch.set(newNameRef, { nome: trimmedName, criadoEm: Timestamp.now() });
-        await batch.commit();
+        await setDoc(newNameRef, { nome: trimmedName, criadoEm: Timestamp.now() });
     }
 }
 
-
+/**
+ * Server Action para adicionar um novo produto.
+ * Lida com upload de imagem e criação de documento no Firestore.
+ * Retorna sempre um objeto serializável.
+ */
 export async function addProductAction(formData: FormData): Promise<{ success: boolean; error?: string }> {
   const rawData = {
     nome: formData.get('nome'),
@@ -38,68 +43,84 @@ export async function addProductAction(formData: FormData): Promise<{ success: b
     validade: formData.get('validade'),
   };
 
-  const parsed = ProductSchema.safeParse(rawData);
+  // Validação dos dados com Zod
+  const validatedFields = ProductFormSchema.safeParse(rawData);
 
-  if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0].message };
+  if (!validatedFields.success) {
+    // Retorna a primeira mensagem de erro se a validação falhar
+    return {
+      success: false,
+      error: validatedFields.error.errors[0].message,
+    };
   }
 
   try {
-    const { nome, lote, validade } = parsed.data;
-    
+    const { nome, lote, validade } = validatedFields.data;
+
+    // Garante que o nome do produto existe na coleção de nomes
     await ensureProductNameExists(nome);
 
-    let fotoEtiqueta = '';
+    let fotoEtiquetaUrl = '';
     const imageFile = formData.get('fotoEtiqueta') as File | null;
-    
+
+    // Se houver um arquivo de imagem, faz o upload para o Firebase Storage
     if (imageFile && imageFile.size > 0) {
       const storageRef = ref(storage, `product-labels/${Date.now()}-${imageFile.name}`);
       const uploadResult = await uploadBytes(storageRef, imageFile);
-      fotoEtiqueta = await getDownloadURL(uploadResult.ref);
+      fotoEtiquetaUrl = await getDownloadURL(uploadResult.ref);
     }
-    
+
+    // Converte a string de data para um Timestamp do Firebase
     const [year, month, day] = validade.split('-').map(Number);
     const validadeDate = new Date(Date.UTC(year, month - 1, day));
+    const validadeTimestamp = Timestamp.fromDate(validadeDate);
 
-    const newProduct = {
+    // Cria o novo documento de produto na coleção 'produtos'
+    await addDoc(collection(db, 'produtos'), {
       nome,
       lote,
-      validade: Timestamp.fromDate(validadeDate),
-      fotoEtiqueta,
+      validade: validadeTimestamp,
+      fotoEtiqueta: fotoEtiquetaUrl,
       criadoEm: Timestamp.now(),
-      alertado: false,
-    };
+      alertado: false, // Campo padrão
+    });
 
-    await addDoc(collection(db, 'produtos'), newProduct);
-
+    // Revalida os caches das páginas afetadas para refletir a mudança
     revalidatePath('/dashboard');
     revalidatePath('/add');
     revalidatePath('/notifications');
     revalidatePath('/reports');
+
     return { success: true };
   } catch (error) {
-    console.error('Error adding product:', error);
-    let errorMessage = 'Ocorreu um erro inesperado ao salvar o produto.';
-    if (error instanceof Error) {
-        errorMessage = error.message;
-    }
-    return { success: false, error: errorMessage };
+    console.error('Erro ao adicionar produto:', error);
+    // Retorna uma mensagem de erro genérica em caso de falha no servidor
+    return { success: false, error: 'Não foi possível salvar o produto. Tente novamente.' };
   }
 }
 
+/**
+ * Server Action para excluir um produto.
+ * Remove o documento do Firestore.
+ * Retorna sempre um objeto serializável.
+ */
 export async function deleteProductAction(productId: string): Promise<{ success: boolean; error?: string }> {
-    if (!productId) {
-        return { success: false, error: 'ID do produto não fornecido.' };
-    }
-    try {
-        const productRef = doc(db, 'produtos', productId);
-        await deleteDoc(productRef);
-        revalidatePath('/dashboard');
-        revalidatePath('/notifications');
-        revalidatePath('/reports');
-        return { success: true };
-    } catch (error) {
-        console.error("Error deleting product:", error);
-        return { success: false, error: 'Falha ao deletar o produto.' };
-    }
+  if (!productId) {
+    return { success: false, error: 'ID do produto não fornecido.' };
+  }
+
+  try {
+    const productRef = doc(db, 'produtos', productId);
+    await deleteDoc(productRef);
+
+    // Revalida os caches das páginas afetadas
+    revalidatePath('/dashboard');
+    revalidatePath('/notifications');
+    revalidatePath('/reports');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Erro ao excluir produto:', error);
+    return { success: false, error: 'Não foi possível excluir o produto. Tente novamente.' };
+  }
 }
