@@ -27,17 +27,17 @@ async function ensureProductNameExists(productName: string) {
 
 
 export async function addProductAction(formData: FormData) {
-  try {
-    const parsed = ProductSchema.safeParse({
-      nome: formData.get('nome'),
-      lote: formData.get('lote'),
-      validade: formData.get('validade'),
-    });
+  const parsed = ProductSchema.safeParse({
+    nome: formData.get('nome'),
+    lote: formData.get('lote'),
+    validade: formData.get('validade'),
+  });
 
-    if (!parsed.success) {
-      return { success: false, error: parsed.error.flatten().fieldErrors };
-    }
-    
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.flatten().fieldErrors };
+  }
+
+  try {
     await ensureProductNameExists(parsed.data.nome);
 
     let fotoEtiqueta = '';
@@ -49,6 +49,7 @@ export async function addProductAction(formData: FormData) {
       fotoEtiqueta = await getDownloadURL(uploadResult.ref);
     }
     
+    // Using UTC to prevent timezone issues
     const validadeDate = new Date(parsed.data.validade + 'T00:00:00Z');
 
     const newProduct = {
@@ -66,7 +67,7 @@ export async function addProductAction(formData: FormData) {
     return { success: true };
   } catch (error) {
     console.error('Error adding product:', error);
-    let errorMessage = 'Ocorreu um erro inesperado.';
+    let errorMessage = 'Ocorreu um erro inesperado ao salvar o produto.';
     if (error instanceof Error) {
         errorMessage = error.message;
     }
