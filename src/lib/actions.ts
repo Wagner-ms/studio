@@ -8,11 +8,12 @@ import { revalidatePath } from 'next/cache';
 const ProductSchema = z.object({
   nome: z.string().trim().min(1, 'O nome do produto é obrigatório'),
   lote: z.string().trim().min(1, 'O número do lote é obrigatório'),
-  validade: z.string().refine((val) => /^\d{4}-\d{2}-\d{2}$/.test(val), {
+  validade: z.string().refine((val) => val && /^\d{4}-\d{2}-\d{2}$/.test(val), {
     message: 'A data de validade deve estar no formato AAAA-MM-DD.',
   }),
   fotoEtiquetaUrl: z.string().url().optional().or(z.literal('')),
 });
+
 
 async function ensureProductNameExists(productName: string) {
     const trimmedName = productName.trim();
@@ -28,29 +29,31 @@ async function ensureProductNameExists(productName: string) {
     }
 }
 
-export async function addProductAction(productData: z.infer<typeof ProductSchema>): Promise<{ success: boolean; error?: string }> {
+export async function addProductAction(productData: {
+  nome: string;
+  lote: string;
+  validade: string;
+  fotoEtiquetaUrl: string;
+}): Promise<{ success: boolean; error?: string }> {
   try {
     const validatedFields = ProductSchema.safeParse(productData);
-
-    if (!validatedFields.success) {
+     if (!validatedFields.success) {
       return {
         success: false,
         error: validatedFields.error.errors.map(e => e.message).join(', '),
       };
     }
-
-    const { nome, lote, validade, fotoEtiquetaUrl } = validatedFields.data;
-
-    await ensureProductNameExists(nome);
     
+    const { nome, lote, validade, fotoEtiquetaUrl } = validatedFields.data;
+    await ensureProductNameExists(nome);
+
     const [year, month, day] = validade.split('-').map(Number);
     const validadeDate = new Date(Date.UTC(year, month - 1, day));
-    const validadeTimestamp = Timestamp.fromDate(validadeDate);
-
+    
     await addDoc(collection(db, 'produtos'), {
       nome,
       lote,
-      validade: validadeTimestamp,
+      validade: Timestamp.fromDate(validadeDate),
       fotoEtiqueta: fotoEtiquetaUrl,
       criadoEm: Timestamp.now(),
       alertado: false,
@@ -68,7 +71,6 @@ export async function addProductAction(productData: z.infer<typeof ProductSchema
     return { success: false, error: `Não foi possível salvar o produto. Detalhe: ${errorMessage}` };
   }
 }
-
 
 export async function deleteProductAction(productId: string): Promise<{ success: boolean; error?: string }> {
   if (!productId) {
