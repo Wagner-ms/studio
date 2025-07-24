@@ -31,14 +31,19 @@ async function ensureProductNameExists(productName: string) {
 
 
 export async function addProductAction(formData: FormData) {
-  const parsed = ProductSchema.safeParse({
+  const data = {
     nome: formData.get('nome'),
     lote: formData.get('lote'),
     validade: formData.get('validade'),
-  });
+  };
+
+  const parsed = ProductSchema.safeParse(data);
 
   if (!parsed.success) {
-    return { success: false, error: parsed.error.flatten() };
+    // Manually structure the error to ensure a simple, serializable object is returned.
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+    const formError = fieldErrors._form?.[0] ?? 'Verifique os campos do formulário.';
+    return { success: false, error: { _form: [formError] } };
   }
 
   try {
@@ -53,7 +58,6 @@ export async function addProductAction(formData: FormData) {
       fotoEtiqueta = await getDownloadURL(uploadResult.ref);
     }
     
-    // Use date-fns to parse the date string correctly without timezone issues
     const validadeDate = parse(parsed.data.validade, 'yyyy-MM-dd', new Date());
 
     const newProduct = {
@@ -77,7 +81,7 @@ export async function addProductAction(formData: FormData) {
     if (error instanceof Error) {
         errorMessage = error.message;
     }
-    return { success: false, error: { formErrors: [errorMessage], fieldErrors: {} } };
+    return { success: false, error: { _form: [errorMessage] } };
   }
 }
 
