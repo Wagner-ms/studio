@@ -15,8 +15,9 @@ import { Camera, Check, ChevronsUpDown, Loader2, PlusCircle, Save, Wand2 } from 
 import Image from 'next/image';
 import { extractProductDetails } from '@/ai/flows/extract-product-details';
 import { isValid, parse, parseISO } from 'date-fns';
-import { collection, getDocs, orderBy, query, setDoc, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { db, storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import type { ProductName } from '@/lib/types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
@@ -28,7 +29,7 @@ const FormSchema = z.object({
   validade: z.string().refine((val) => val && /^\d{4}-\d{2}-\d{2}$/.test(val) && isValid(parse(val, 'yyyy-MM-dd', new Date())), {
     message: 'Data inválida. Use o formato AAAA-MM-DD.',
   }),
-  fotoEtiqueta: z.any().optional(),
+  fotoEtiquetaFile: z.instanceof(File).optional(),
 });
 
 type FormValues = z.infer<typeof FormSchema>;
@@ -69,7 +70,7 @@ export default function AddProductPage() {
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      form.setValue('fotoEtiqueta', file);
+      form.setValue('fotoEtiquetaFile', file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -79,7 +80,7 @@ export default function AddProductPage() {
   };
 
   const handleOcr = async () => {
-    const imageFile = form.getValues('fotoEtiqueta');
+    const imageFile = form.getValues('fotoEtiquetaFile');
     if (!imageFile || !(imageFile instanceof File)) {
       toast({
         variant: 'destructive',
@@ -142,15 +143,23 @@ export default function AddProductPage() {
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsSubmitting(true);
     try {
-        const formData = new FormData();
-        if (data.fotoEtiqueta instanceof File) {
-          formData.append('fotoEtiqueta', data.fotoEtiqueta);
-        }
-        formData.append('nome', data.nome);
-        formData.append('lote', data.lote);
-        formData.append('validade', data.validade);
+        let fotoEtiquetaUrl = '';
+        const imageFile = data.fotoEtiquetaFile;
 
-        const result = await addProductAction(formData);
+        if (imageFile && imageFile.size > 0) {
+          const storageRef = ref(storage, `product-labels/${Date.now()}-${imageFile.name}`);
+          const uploadResult = await uploadBytes(storageRef, imageFile);
+          fotoEtiquetaUrl = await getDownloadURL(uploadResult.ref);
+        }
+
+        const productData = {
+          nome: data.nome,
+          lote: data.lote,
+          validade: data.validade,
+          fotoEtiquetaUrl: fotoEtiquetaUrl,
+        };
+
+        const result = await addProductAction(productData);
 
         if (result.success) {
           toast({

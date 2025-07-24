@@ -2,16 +2,16 @@
 
 import { z } from 'zod';
 import { addDoc, collection, Timestamp, deleteDoc, doc, query, where, getDocs, setDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from './firebase';
+import { db } from './firebase';
 import { revalidatePath } from 'next/cache';
 
-const ProductFormSchema = z.object({
+const ProductSchema = z.object({
   nome: z.string().trim().min(1, 'O nome do produto é obrigatório'),
   lote: z.string().trim().min(1, 'O número do lote é obrigatório'),
   validade: z.string().refine((val) => /^\d{4}-\d{2}-\d{2}$/.test(val), {
     message: 'A data de validade deve estar no formato AAAA-MM-DD.',
   }),
+  fotoEtiquetaUrl: z.string().url().optional().or(z.literal('')),
 });
 
 async function ensureProductNameExists(productName: string) {
@@ -28,37 +28,21 @@ async function ensureProductNameExists(productName: string) {
     }
 }
 
-
-export async function addProductAction(formData: FormData): Promise<{ success: boolean; error?: string }> {
+export async function addProductAction(productData: z.infer<typeof ProductSchema>): Promise<{ success: boolean; error?: string }> {
   try {
-    const rawData = {
-      nome: formData.get('nome'),
-      lote: formData.get('lote'),
-      validade: formData.get('validade'),
-    };
-
-    const validatedFields = ProductFormSchema.safeParse(rawData);
+    const validatedFields = ProductSchema.safeParse(productData);
 
     if (!validatedFields.success) {
       return {
         success: false,
-        error: validatedFields.error.errors[0].message,
+        error: validatedFields.error.errors.map(e => e.message).join(', '),
       };
     }
 
-    const { nome, lote, validade } = validatedFields.data;
+    const { nome, lote, validade, fotoEtiquetaUrl } = validatedFields.data;
 
     await ensureProductNameExists(nome);
-
-    let fotoEtiquetaUrl = '';
-    const imageFile = formData.get('fotoEtiqueta') as File | null;
-
-    if (imageFile && imageFile.size > 0) {
-      const storageRef = ref(storage, `product-labels/${Date.now()}-${imageFile.name}`);
-      const uploadResult = await uploadBytes(storageRef, imageFile);
-      fotoEtiquetaUrl = await getDownloadURL(uploadResult.ref);
-    }
-
+    
     const [year, month, day] = validade.split('-').map(Number);
     const validadeDate = new Date(Date.UTC(year, month - 1, day));
     const validadeTimestamp = Timestamp.fromDate(validadeDate);
@@ -80,9 +64,11 @@ export async function addProductAction(formData: FormData): Promise<{ success: b
     return { success: true };
   } catch (error) {
     console.error('Erro ao adicionar produto:', error);
-    return { success: false, error: 'Não foi possível salvar o produto. Tente novamente.' };
+    const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
+    return { success: false, error: `Não foi possível salvar o produto. Detalhe: ${errorMessage}` };
   }
 }
+
 
 export async function deleteProductAction(productId: string): Promise<{ success: boolean; error?: string }> {
   if (!productId) {
@@ -100,6 +86,7 @@ export async function deleteProductAction(productId: string): Promise<{ success:
     return { success: true };
   } catch (error) {
     console.error('Erro ao excluir produto:', error);
-    return { success: false, error: 'Não foi possível excluir o produto. Tente novamente.' };
+    const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
+    return { success: false, error: `Não foi possível excluir o produto. Detalhe: ${errorMessage}` };
   }
 }
