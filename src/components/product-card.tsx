@@ -37,6 +37,7 @@ import {
 import { deleteProductAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 
 const statusStyles: Record<ExpirationStatus, {
   icon: React.ElementType,
@@ -65,6 +66,7 @@ const statusStyles: Record<ExpirationStatus, {
 };
 
 export function ProductCard({ product }: { product: Product }) {
+  const router = useRouter();
   const expirationDate = product.validade.toDate();
   const status = getExpirationStatus(expirationDate);
   const { icon: Icon, badgeVariant, cardClass, text } = statusStyles[status];
@@ -75,20 +77,14 @@ export function ProductCard({ product }: { product: Product }) {
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-        const result = await deleteProductAction(product.id);
-        
-        if (result.success) {
-          toast({
-            title: 'Produto excluído!',
-            description: `${product.nome} foi removido com sucesso.`,
-          });
-        } else {
-          toast({
-            variant: 'destructive',
-            title: 'Erro ao excluir',
-            description: result.error || 'Não foi possível remover o produto. Tente novamente.',
-          });
-        }
+        await deleteProductAction(product.id);
+        toast({
+          title: 'Produto excluído!',
+          description: `${product.nome} foi removido com sucesso.`,
+        });
+        // We don't need to manually remove the card, revalidation will do it.
+        // But for a better UX, we can force a refresh if revalidation is slow.
+        router.refresh();
     } catch (error) {
          toast({
             variant: 'destructive',

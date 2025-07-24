@@ -60,7 +60,6 @@ export async function addProductAction(formData: FormData): Promise<{ success: b
       fotoEtiqueta = await getDownloadURL(uploadResult.ref);
     }
     
-    // Convert string to Date, then to Firestore Timestamp inside the action
     const validadeDate = parse(validade, 'yyyy-MM-dd', new Date());
 
     const newProduct = {
@@ -89,9 +88,9 @@ export async function addProductAction(formData: FormData): Promise<{ success: b
   }
 }
 
-export async function deleteProductAction(productId: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteProductAction(productId: string) {
     if (!productId) {
-        return { success: false, error: 'ID do produto não fornecido.' };
+        throw new Error('ID do produto não fornecido.');
     }
 
     try {
@@ -100,9 +99,8 @@ export async function deleteProductAction(productId: string): Promise<{ success:
         revalidatePath('/dashboard');
         revalidatePath('/notifications');
         revalidatePath('/reports');
-        return { success: true };
     } catch (error) {
         console.error("Error deleting product:", error);
-        return { success: false, error: 'Falha ao deletar o produto.' };
+        throw new Error('Falha ao deletar o produto.');
     }
 }
