@@ -74,21 +74,18 @@ export function ProductCard({ product }: { product: Product }) {
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    try {
-      await deleteProductAction(product.id);
+    const result = await deleteProductAction(product.id);
+    
+    if (result.success) {
       toast({
         title: 'Produto excluído!',
         description: `${product.nome} foi removido com sucesso.`,
       });
-    } catch (error) {
-       let errorMessage = 'Não foi possível remover o produto. Tente novamente.';
-       if (error instanceof Error) {
-          errorMessage = error.message;
-       }
+    } else {
       toast({
         variant: 'destructive',
         title: 'Erro ao excluir',
-        description: errorMessage,
+        description: result.error || 'Não foi possível remover o produto. Tente novamente.',
       });
       setIsDeleting(false);
     }

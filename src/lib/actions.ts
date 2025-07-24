@@ -49,7 +49,6 @@ export async function addProductAction(formData: FormData) {
       fotoEtiqueta = await getDownloadURL(uploadResult.ref);
     }
     
-    // Create date object from YYYY-MM-DD string at UTC to avoid timezone issues.
     const validadeDate = new Date(parsed.data.validade + 'T00:00:00Z');
 
     const newProduct = {
@@ -75,17 +74,18 @@ export async function addProductAction(formData: FormData) {
   }
 }
 
-export async function deleteProductAction(productId: string) {
+export async function deleteProductAction(productId: string): Promise<{ success: boolean; error?: string }> {
     if (!productId) {
-        throw new Error('ID do produto não fornecido.');
+        return { success: false, error: 'ID do produto não fornecido.' };
     }
 
     try {
         const productRef = doc(db, 'produtos', productId);
         await deleteDoc(productRef);
         revalidatePath('/dashboard');
+        return { success: true };
     } catch (error) {
         console.error("Error deleting product:", error);
-        throw new Error('Falha ao deletar o produto.');
+        return { success: false, error: 'Falha ao deletar o produto.' };
     }
 }
