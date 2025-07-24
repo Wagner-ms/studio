@@ -8,7 +8,6 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { addProductAction } from '@/lib/actions';
@@ -22,7 +21,7 @@ const FormSchema = z.object({
   validade: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: 'Formato de data inválido',
   }),
-  fotoEtiqueta: z.any().refine((file) => file instanceof File, 'A imagem é obrigatória'),
+  fotoEtiqueta: z.any().optional(),
 });
 
 type FormValues = z.infer<typeof FormSchema>;
@@ -99,9 +98,13 @@ export default function AddProductPage() {
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsSubmitting(true);
     const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      formData.append(key, value);
-    });
+    // Apenas anexa a foto se ela existir
+    if (data.fotoEtiqueta instanceof File) {
+      formData.append('fotoEtiqueta', data.fotoEtiqueta);
+    }
+    formData.append('nome', data.nome);
+    formData.append('lote', data.lote);
+    formData.append('validade', data.validade);
 
     const result = await addProductAction(formData);
 
@@ -127,13 +130,13 @@ export default function AddProductPage() {
         <CardHeader>
           <CardTitle className="font-headline text-2xl">Adicionar Novo Produto</CardTitle>
           <CardDescription>
-            Capture uma foto da etiqueta do produto para preencher os detalhes automaticamente.
+            Capture uma foto da etiqueta do produto para preencher os detalhes automaticamente ou preencha manualmente.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="fotoEtiqueta">Foto da Etiqueta do Produto</Label>
+              <Label htmlFor="fotoEtiqueta">Foto da Etiqueta (Opcional)</Label>
               <Input
                 id="fotoEtiqueta"
                 type="file"
@@ -156,9 +159,6 @@ export default function AddProductPage() {
                   </div>
                 )}
               </div>
-              {form.formState.errors.fotoEtiqueta && (
-                <p className="text-sm font-medium text-destructive">{form.formState.errors.fotoEtiqueta.message as string}</p>
-              )}
             </div>
 
             <Button

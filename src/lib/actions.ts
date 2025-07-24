@@ -24,15 +24,15 @@ export async function addProductAction(formData: FormData) {
       return { success: false, error: parsed.error.flatten().fieldErrors };
     }
 
-    const imageFile = formData.get('fotoEtiqueta') as File;
-    if (!imageFile || imageFile.size === 0) {
-      return { success: false, error: { fotoEtiqueta: ['A imagem é obrigatória.'] } };
+    let fotoEtiqueta = '';
+    const imageFile = formData.get('fotoEtiqueta') as File | null;
+    
+    // Upload image to Firebase Storage if it exists
+    if (imageFile && imageFile.size > 0) {
+      const storageRef = ref(storage, `product-labels/${Date.now()}-${imageFile.name}`);
+      const uploadResult = await uploadBytes(storageRef, imageFile);
+      fotoEtiqueta = await getDownloadURL(uploadResult.ref);
     }
-
-    // Upload image to Firebase Storage
-    const storageRef = ref(storage, `product-labels/${Date.now()}-${imageFile.name}`);
-    const uploadResult = await uploadBytes(storageRef, imageFile);
-    const fotoEtiqueta = await getDownloadURL(uploadResult.ref);
 
     // Prepare data for Firestore
     const newProduct = {

@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn, formatDate, getExpirationStatus } from '@/lib/utils';
-import { AlertTriangle, CheckCircle2, Eye, Tag, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Eye, FileQuestion, Tag, XCircle } from 'lucide-react';
 import type { ExpirationStatus } from '@/lib/utils';
 
 const statusStyles: Record<ExpirationStatus, {
@@ -75,7 +75,7 @@ export function ProductCard({ product }: { product: Product }) {
       <CardFooter>
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full" disabled={!product.fotoEtiqueta}>
               <Eye className="mr-2" /> Ver Etiqueta
             </Button>
           </DialogTrigger>
@@ -83,14 +83,21 @@ export function ProductCard({ product }: { product: Product }) {
             <DialogHeader>
               <DialogTitle>{product.nome}</DialogTitle>
             </DialogHeader>
-            <div className="relative w-full aspect-video mt-4 rounded-md overflow-hidden">
-               <Image
-                src={product.fotoEtiqueta}
-                alt={`Etiqueta para ${product.nome}`}
-                layout="fill"
-                objectFit="contain"
-                data-ai-hint="product label"
-              />
+            <div className="relative w-full aspect-video mt-4 rounded-md overflow-hidden bg-muted flex items-center justify-center">
+               {product.fotoEtiqueta ? (
+                 <Image
+                    src={product.fotoEtiqueta}
+                    alt={`Etiqueta para ${product.nome}`}
+                    layout="fill"
+                    objectFit="contain"
+                    data-ai-hint="product label"
+                  />
+               ) : (
+                <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                  <FileQuestion className="w-12 h-12" />
+                  <span>Nenhuma imagem disponível</span>
+                </div>
+               )}
             </div>
           </DialogContent>
         </Dialog>
