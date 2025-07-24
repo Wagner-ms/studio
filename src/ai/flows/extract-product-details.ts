@@ -21,9 +21,9 @@ const ExtractProductDetailsInputSchema = z.object({
 export type ExtractProductDetailsInput = z.infer<typeof ExtractProductDetailsInputSchema>;
 
 const ExtractProductDetailsOutputSchema = z.object({
-  productName: z.string().describe('The name of the product.'),
-  lotNumber: z.string().describe('The lot number of the product.'),
-  expirationDate: z.string().describe('The expiration date of the product in ISO 8601 format (YYYY-MM-DD).'),
+  productName: z.string().optional().describe('The name of the product.'),
+  lotNumber: z.string().optional().describe('The lot number of the product.'),
+  expirationDate: z.string().optional().describe('The expiration date of the product in ISO 8601 format (YYYY-MM-DD).'),
 });
 export type ExtractProductDetailsOutput = z.infer<typeof ExtractProductDetailsOutputSchema>;
 
@@ -39,7 +39,7 @@ const prompt = ai.definePrompt({
   output: {schema: ExtractProductDetailsOutputSchema},
   prompt: `You are an expert in recognizing product labels using OCR.
 
-You will use this information to extract the product name, lot number, and expiration date from the label.  The expiration date MUST be returned in ISO 8601 format (YYYY-MM-DD).
+You will use this information to extract the product name, lot number, and expiration date from the label. If a value cannot be determined, do not return it. The expiration date MUST be returned in ISO 8601 format (YYYY-MM-DD).
 
 Product Label Photo: {{media url=photoDataUri}}
 `,

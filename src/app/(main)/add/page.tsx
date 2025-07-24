@@ -95,19 +95,26 @@ export default function AddProductPage() {
         const photoDataUri = e.target?.result as string;
         if (photoDataUri) {
           const result = await extractProductDetails({ photoDataUri });
-          form.setValue('nome', result.productName, { shouldValidate: true });
-          form.setValue('lote', result.lotNumber, { shouldValidate: true });
+          
+          if (result.productName) {
+            form.setValue('nome', result.productName, { shouldValidate: true });
+          }
+          if (result.lotNumber) {
+            form.setValue('lote', result.lotNumber, { shouldValidate: true });
+          }
 
-          const parsedDate = parseISO(result.expirationDate);
-          if (isValid(parsedDate)) {
-             form.setValue('validade', result.expirationDate, { shouldValidate: true });
-          } else {
-            form.setValue('validade', '', { shouldValidate: true });
-             toast({
-                variant: 'destructive',
-                title: 'Data de Validade Inválida',
-                description: 'A IA não conseguiu extrair uma data válida. Por favor, insira manualmente.',
-             });
+          if (result.expirationDate) {
+            const parsedDate = parseISO(result.expirationDate);
+            if (isValid(parsedDate)) {
+               form.setValue('validade', result.expirationDate, { shouldValidate: true });
+            } else {
+              form.setValue('validade', '', { shouldValidate: true });
+               toast({
+                  variant: 'destructive',
+                  title: 'Data de Validade Inválida',
+                  description: 'A IA não conseguiu extrair uma data válida. Por favor, insira manualmente.',
+               });
+            }
           }
 
           toast({
