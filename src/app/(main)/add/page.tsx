@@ -161,7 +161,7 @@ export default function AddProductPage() {
       toast({
         variant: 'destructive',
         title: 'Erro ao salvar',
-        description: result.error, // Exibe o erro padronizado retornado pela Server Action
+        description: result.error,
       });
     }
      setIsSubmitting(false);
