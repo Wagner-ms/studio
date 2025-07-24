@@ -131,7 +131,7 @@ export default function AddProductPage() {
       toast({
         variant: 'destructive',
         title: 'Falha no OCR',
-        description: 'Não foi possível extrair os detalhes da imagem. Por favor, preencha manually.',
+        description: 'Não foi possível extrair os detalhes da imagem. Por favor, preencha manualmente.',
       });
     } finally {
       setIsOcrLoading(false);
@@ -232,9 +232,7 @@ export default function AddProductPage() {
                     aria-expanded={comboboxOpen}
                     className="w-full justify-between font-normal"
                   >
-                    {form.getValues('nome')
-                      ? productNames.find((p) => p.nome.toLowerCase() === form.getValues('nome').toLowerCase())?.nome
-                      : "Selecione ou crie um novo"}
+                    {form.getValues('nome') || "Selecione ou crie um novo"}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
