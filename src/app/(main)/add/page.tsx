@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { addProductAction } from '@/lib/actions';
-import { Camera, Check, ChevronsUpDown, Loader2, Save, Wand2 } from 'lucide-react';
+import { Camera, Check, ChevronsUpDown, Loader2, PlusCircle, Save, Wand2 } from 'lucide-react';
 import Image from 'next/image';
 import { extractProductDetails } from '@/ai/flows/extract-product-details';
 import { isValid, parseISO } from 'date-fns';
@@ -48,10 +48,7 @@ export default function AddProductPage() {
   const [isOcrLoading, setIsOcrLoading] = React.useState(false);
   const [productNames, setProductNames] = React.useState<ProductName[]>([]);
   const [comboboxOpen, setComboboxOpen] = React.useState(false);
-
-  React.useEffect(() => {
-    getProductNames().then(setProductNames);
-  }, []);
+  const [inputValue, setInputValue] = React.useState('');
 
   const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
@@ -61,6 +58,11 @@ export default function AddProductPage() {
       validade: '',
     },
   });
+
+  React.useEffect(() => {
+    getProductNames().then(setProductNames);
+  }, []);
+
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -98,6 +100,7 @@ export default function AddProductPage() {
           
           if (result.productName) {
             form.setValue('nome', result.productName, { shouldValidate: true });
+            setInputValue(result.productName);
           }
           if (result.lotNumber) {
             form.setValue('lote', result.lotNumber, { shouldValidate: true });
@@ -163,6 +166,10 @@ export default function AddProductPage() {
     }
   };
 
+  const filteredProductNames = productNames.filter(p => p.nome.toLowerCase().includes(inputValue.toLowerCase()));
+  const isNewProduct = inputValue && !productNames.some(p => p.nome.toLowerCase() === inputValue.toLowerCase());
+
+
   return (
     <div className="max-w-2xl mx-auto">
       <Card>
@@ -226,8 +233,8 @@ export default function AddProductPage() {
                     className="w-full justify-between font-normal"
                   >
                     {form.getValues('nome')
-                      ? productNames.find((p) => p.nome === form.getValues('nome'))?.nome
-                      : "Selecione ou digite um nome"}
+                      ? productNames.find((p) => p.nome.toLowerCase() === form.getValues('nome').toLowerCase())?.nome
+                      : "Selecione ou crie um novo"}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
@@ -235,29 +242,46 @@ export default function AddProductPage() {
                   <Command>
                     <CommandInput 
                       placeholder="Busque ou crie um novo produto..."
-                      onValueChange={(search) => form.setValue('nome', search)}
+                      value={inputValue}
+                      onValueChange={setInputValue}
                      />
-                    <CommandEmpty>Nenhum produto encontrado.</CommandEmpty>
                     <CommandList>
+                      <CommandEmpty>
+                        {isNewProduct ? ' ' : 'Nenhum produto encontrado.'}
+                      </CommandEmpty>
                       <CommandGroup>
-                        {productNames.map((p) => (
+                        {filteredProductNames.map((p) => (
                           <CommandItem
                             key={p.id}
                             value={p.nome}
                             onSelect={(currentValue) => {
-                              form.setValue("nome", currentValue === form.getValues('nome') ? "" : currentValue, { shouldValidate: true });
+                              form.setValue("nome", currentValue, { shouldValidate: true });
+                              setInputValue(currentValue);
                               setComboboxOpen(false);
                             }}
                           >
                             <Check
                               className={cn(
                                 "mr-2 h-4 w-4",
-                                form.getValues('nome') === p.nome ? "opacity-100" : "opacity-0"
+                                form.getValues('nome').toLowerCase() === p.nome.toLowerCase() ? "opacity-100" : "opacity-0"
                               )}
                             />
                             {p.nome}
                           </CommandItem>
                         ))}
+                        {isNewProduct && (
+                           <CommandItem
+                              value={inputValue}
+                              onSelect={(currentValue) => {
+                                 form.setValue("nome", currentValue, { shouldValidate: true });
+                                 setInputValue(currentValue);
+                                 setComboboxOpen(false);
+                              }}
+                           >
+                              <PlusCircle className="mr-2 h-4 w-4"/>
+                              Criar "{inputValue}"
+                           </CommandItem>
+                        )}
                       </CommandGroup>
                     </CommandList>
                   </Command>
