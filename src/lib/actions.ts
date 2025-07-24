@@ -35,16 +35,18 @@ export async function addProductAction(productData: {
   validade: string;
   fotoEtiquetaUrl: string;
 }): Promise<{ success: boolean; error?: string }> {
+  const validatedFields = ProductSchema.safeParse(productData);
+
+  if (!validatedFields.success) {
+    return {
+      success: false,
+      error: validatedFields.error.errors.map(e => e.message).join(', '),
+    };
+  }
+  
+  const { nome, lote, validade, fotoEtiquetaUrl } = validatedFields.data;
+  
   try {
-    const validatedFields = ProductSchema.safeParse(productData);
-     if (!validatedFields.success) {
-      return {
-        success: false,
-        error: validatedFields.error.errors.map(e => e.message).join(', '),
-      };
-    }
-    
-    const { nome, lote, validade, fotoEtiquetaUrl } = validatedFields.data;
     await ensureProductNameExists(nome);
 
     const [year, month, day] = validade.split('-').map(Number);
@@ -58,18 +60,18 @@ export async function addProductAction(productData: {
       criadoEm: Timestamp.now(),
       alertado: false,
     });
-
-    revalidatePath('/dashboard');
-    revalidatePath('/add');
-    revalidatePath('/notifications');
-    revalidatePath('/reports');
-
-    return { success: true };
   } catch (error) {
     console.error('Erro ao adicionar produto:', error);
     const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
     return { success: false, error: `Não foi possível salvar o produto. Detalhe: ${errorMessage}` };
   }
+
+  revalidatePath('/dashboard');
+  revalidatePath('/add');
+  revalidatePath('/notifications');
+  revalidatePath('/reports');
+
+  return { success: true };
 }
 
 export async function deleteProductAction(productId: string): Promise<{ success: boolean; error?: string }> {
@@ -80,15 +82,15 @@ export async function deleteProductAction(productId: string): Promise<{ success:
   try {
     const productRef = doc(db, 'produtos', productId);
     await deleteDoc(productRef);
-
-    revalidatePath('/dashboard');
-    revalidatePath('/notifications');
-    revalidatePath('/reports');
-
-    return { success: true };
   } catch (error) {
     console.error('Erro ao excluir produto:', error);
     const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
     return { success: false, error: `Não foi possível excluir o produto. Detalhe: ${errorMessage}` };
   }
+
+  revalidatePath('/dashboard');
+  revalidatePath('/notifications');
+  revalidatePath('/reports');
+
+  return { success: true };
 }
