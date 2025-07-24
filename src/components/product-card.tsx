@@ -81,10 +81,14 @@ export function ProductCard({ product }: { product: Product }) {
         description: `${product.nome} foi removido com sucesso.`,
       });
     } catch (error) {
+       let errorMessage = 'Não foi possível remover o produto. Tente novamente.';
+       if (error instanceof Error) {
+          errorMessage = error.message;
+       }
       toast({
         variant: 'destructive',
         title: 'Erro ao excluir',
-        description: 'Não foi possível remover o produto. Tente novamente.',
+        description: errorMessage,
       });
       setIsDeleting(false);
     }

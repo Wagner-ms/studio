@@ -50,8 +50,7 @@ export async function addProductAction(formData: FormData) {
     }
     
     // Create date object from YYYY-MM-DD string at UTC to avoid timezone issues.
-    const dateParts = parsed.data.validade.split('-').map(Number);
-    const validadeDate = new Date(Date.UTC(dateParts[0], dateParts[1] - 1, dateParts[2]));
+    const validadeDate = new Date(parsed.data.validade + 'T00:00:00Z');
 
     const newProduct = {
       ...parsed.data,
