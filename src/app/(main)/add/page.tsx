@@ -14,7 +14,7 @@ import { addProductAction } from '@/lib/actions';
 import { Camera, Check, ChevronsUpDown, Loader2, PlusCircle, Save, Wand2 } from 'lucide-react';
 import Image from 'next/image';
 import { extractProductDetails } from '@/ai/flows/extract-product-details';
-import { isValid, parseISO } from 'date-fns';
+import { isValid, parse, parseISO } from 'date-fns';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { ProductName } from '@/lib/types';
@@ -25,8 +25,8 @@ import { cn } from '@/lib/utils';
 const FormSchema = z.object({
   nome: z.string().min(1, 'O nome do produto é obrigatório'),
   lote: z.string().min(1, 'O número do lote é obrigatório'),
-  validade: z.string().refine((val) => !isNaN(Date.parse(val)), {
-    message: 'Formato de data inválido',
+  validade: z.string().refine((val) => val && isValid(parse(val, 'yyyy-MM-dd', new Date())), {
+    message: 'Data inválida. Use o formato AAAA-MM-DD.',
   }),
   fotoEtiqueta: z.any().optional(),
 });
@@ -99,11 +99,12 @@ export default function AddProductPage() {
           const result = await extractProductDetails({ photoDataUri });
           
           if (result.productName) {
-            form.setValue('nome', result.productName, { shouldValidate: true });
-            setInputValue(result.productName);
+            const trimmedName = result.productName.trim();
+            form.setValue('nome', trimmedName, { shouldValidate: true });
+            setInputValue(trimmedName);
           }
           if (result.lotNumber) {
-            form.setValue('lote', result.lotNumber, { shouldValidate: true });
+            form.setValue('lote', result.lotNumber.trim(), { shouldValidate: true });
           }
 
           if (result.expirationDate) {
@@ -159,8 +160,8 @@ export default function AddProductPage() {
     } else {
       toast({
         variant: 'destructive',
-        title: 'Erro',
-        description: result?.error?._form?.[0] || 'Algo deu errado.',
+        title: 'Erro ao salvar',
+        description: result?.error?._form?.[0] || 'Algo deu errado. Verifique os campos.',
       });
       setIsSubmitting(false);
     }
@@ -169,6 +170,7 @@ export default function AddProductPage() {
   const filteredProductNames = productNames.filter(p => p.nome.toLowerCase().includes(inputValue.toLowerCase()));
   const isNewProduct = inputValue && !productNames.some(p => p.nome.toLowerCase() === inputValue.toLowerCase());
 
+  const selectedProductName = form.getValues('nome');
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -232,7 +234,7 @@ export default function AddProductPage() {
                     aria-expanded={comboboxOpen}
                     className="w-full justify-between font-normal"
                   >
-                    {form.getValues('nome') || "Selecione ou crie um novo"}
+                    {selectedProductName || "Selecione ou crie um novo"}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
@@ -253,15 +255,16 @@ export default function AddProductPage() {
                             key={p.id}
                             value={p.nome}
                             onSelect={(currentValue) => {
-                              form.setValue("nome", currentValue, { shouldValidate: true });
-                              setInputValue(currentValue);
+                              const finalValue = productNames.find(p => p.nome.toLowerCase() === currentValue)?.nome || currentValue;
+                              form.setValue("nome", finalValue, { shouldValidate: true });
+                              setInputValue(finalValue);
                               setComboboxOpen(false);
                             }}
                           >
                             <Check
                               className={cn(
                                 "mr-2 h-4 w-4",
-                                form.getValues('nome').toLowerCase() === p.nome.toLowerCase() ? "opacity-100" : "opacity-0"
+                                selectedProductName?.toLowerCase() === p.nome.toLowerCase() ? "opacity-100" : "opacity-0"
                               )}
                             />
                             {p.nome}
@@ -271,8 +274,9 @@ export default function AddProductPage() {
                            <CommandItem
                               value={inputValue}
                               onSelect={(currentValue) => {
-                                 form.setValue("nome", currentValue, { shouldValidate: true });
-                                 setInputValue(currentValue);
+                                 const finalValue = currentValue.trim();
+                                 form.setValue("nome", finalValue, { shouldValidate: true });
+                                 setInputValue(finalValue);
                                  setComboboxOpen(false);
                               }}
                            >

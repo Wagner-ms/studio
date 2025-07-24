@@ -5,22 +5,26 @@ import { addDoc, collection, Timestamp, deleteDoc, doc, query, where, getDocs, w
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './firebase';
 import { revalidatePath } from 'next/cache';
+import { parse } from 'date-fns';
 
 const ProductSchema = z.object({
-  nome: z.string().min(1, 'O nome do produto é obrigatório'),
-  lote: z.string().min(1, 'O número do lote é obrigatório'),
+  nome: z.string().trim().min(1, 'O nome do produto é obrigatório'),
+  lote: z.string().trim().min(1, 'O número do lote é obrigatório'),
   validade: z.string().min(1, 'A data de validade é obrigatória'),
 });
 
 async function ensureProductNameExists(productName: string) {
+    const trimmedName = productName.trim();
+    if (!trimmedName) return;
+
     const productNamesRef = collection(db, 'nomesDeProdutos');
-    const q = query(productNamesRef, where('nome', '==', productName));
+    const q = query(productNamesRef, where('nome', '==', trimmedName));
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
         const batch = writeBatch(db);
         const newNameRef = doc(collection(db, 'nomesDeProdutos'));
-        batch.set(newNameRef, { nome: productName, criadoEm: Timestamp.now() });
+        batch.set(newNameRef, { nome: trimmedName, criadoEm: Timestamp.now() });
         await batch.commit();
     }
 }
@@ -34,7 +38,7 @@ export async function addProductAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    return { success: false, error: parsed.error.flatten().fieldErrors };
+    return { success: false, error: parsed.error.flatten() };
   }
 
   try {
@@ -49,8 +53,8 @@ export async function addProductAction(formData: FormData) {
       fotoEtiqueta = await getDownloadURL(uploadResult.ref);
     }
     
-    // Using UTC to prevent timezone issues
-    const validadeDate = new Date(parsed.data.validade + 'T00:00:00Z');
+    // Use date-fns to parse the date string correctly without timezone issues
+    const validadeDate = parse(parsed.data.validade, 'yyyy-MM-dd', new Date());
 
     const newProduct = {
       ...parsed.data,
@@ -64,6 +68,8 @@ export async function addProductAction(formData: FormData) {
 
     revalidatePath('/dashboard');
     revalidatePath('/add');
+    revalidatePath('/notifications');
+    revalidatePath('/reports');
     return { success: true };
   } catch (error) {
     console.error('Error adding product:', error);
@@ -71,7 +77,7 @@ export async function addProductAction(formData: FormData) {
     if (error instanceof Error) {
         errorMessage = error.message;
     }
-    return { success: false, error: { _form: [errorMessage] } };
+    return { success: false, error: { formErrors: [errorMessage], fieldErrors: {} } };
   }
 }
 
@@ -84,6 +90,8 @@ export async function deleteProductAction(productId: string): Promise<{ success:
         const productRef = doc(db, 'produtos', productId);
         await deleteDoc(productRef);
         revalidatePath('/dashboard');
+        revalidatePath('/notifications');
+        revalidatePath('/reports');
         return { success: true };
     } catch (error) {
         console.error("Error deleting product:", error);

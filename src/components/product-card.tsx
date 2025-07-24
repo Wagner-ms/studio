@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn, formatDate, getExpirationStatus } from '@/lib/utils';
-import { AlertTriangle, CheckCircle2, Eye, FileQuestion, Tag, Trash2, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Eye, FileQuestion, Loader2, Tag, Trash2, XCircle } from 'lucide-react';
 import type { ExpirationStatus } from '@/lib/utils';
 import {
   AlertDialog,
@@ -164,7 +164,14 @@ export function ProductCard({ product }: { product: Product }) {
             <AlertDialogFooter>
               <AlertDialogCancel>Cancelar</AlertDialogCancel>
               <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
-                {isDeleting ? 'Excluindo...' : 'Excluir'}
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Excluindo...
+                  </>
+                ) : (
+                  'Excluir'
+                )}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -186,8 +193,9 @@ export function ProductCardSkeleton() {
         <Skeleton className="h-6 w-1/4" />
         <Skeleton className="h-4 w-1/2 mt-3" />
       </CardContent>
-      <CardFooter>
-        <Skeleton className="h-10 w-full" />
+      <CardFooter className="flex justify-between gap-2">
+        <Skeleton className="h-10 flex-1" />
+        <Skeleton className="h-10 w-10" />
       </CardFooter>
     </Card>
   );
