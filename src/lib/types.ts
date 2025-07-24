@@ -10,8 +10,13 @@ export interface Product {
   alertado: boolean;
 }
 
-export interface ProductNotification {
+export interface ProductName {
   id: string;
+  nome: string;
+}
+
+export interface ProductNotification {
+  id:string;
   message: string;
   productId: string;
   productName: string;

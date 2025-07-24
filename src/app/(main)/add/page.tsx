@@ -11,10 +11,16 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { addProductAction } from '@/lib/actions';
-import { Camera, Loader2, Save, Wand2 } from 'lucide-react';
+import { Camera, Check, ChevronsUpDown, Loader2, Save, Wand2 } from 'lucide-react';
 import Image from 'next/image';
 import { extractProductDetails } from '@/ai/flows/extract-product-details';
 import { isValid, parseISO } from 'date-fns';
+import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import type { ProductName } from '@/lib/types';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 
 const FormSchema = z.object({
   nome: z.string().min(1, 'O nome do produto é obrigatório'),
@@ -27,11 +33,25 @@ const FormSchema = z.object({
 
 type FormValues = z.infer<typeof FormSchema>;
 
+async function getProductNames(): Promise<ProductName[]> {
+    const productNamesRef = collection(db, 'nomesDeProdutos');
+    const q = query(productNamesRef, orderBy('nome', 'asc'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ProductName));
+}
+
+
 export default function AddProductPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [imagePreview, setImagePreview] = React.useState<string | null>(null);
   const [isOcrLoading, setIsOcrLoading] = React.useState(false);
+  const [productNames, setProductNames] = React.useState<ProductName[]>([]);
+  const [comboboxOpen, setComboboxOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    getProductNames().then(setProductNames);
+  }, []);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
@@ -78,12 +98,11 @@ export default function AddProductPage() {
           form.setValue('nome', result.productName, { shouldValidate: true });
           form.setValue('lote', result.lotNumber, { shouldValidate: true });
 
-          // Validate date before setting
           const parsedDate = parseISO(result.expirationDate);
           if (isValid(parsedDate)) {
              form.setValue('validade', result.expirationDate, { shouldValidate: true });
           } else {
-            form.setValue('validade', '', { shouldValidate: true }); // Clear if invalid
+            form.setValue('validade', '', { shouldValidate: true });
              toast({
                 variant: 'destructive',
                 title: 'Data de Validade Inválida',
@@ -112,7 +131,6 @@ export default function AddProductPage() {
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsSubmitting(true);
     const formData = new FormData();
-    // Apenas anexa a foto se ela existir
     if (data.fotoEtiqueta instanceof File) {
       formData.append('fotoEtiqueta', data.fotoEtiqueta);
     }
@@ -144,7 +162,7 @@ export default function AddProductPage() {
         <CardHeader>
           <CardTitle className="font-headline text-2xl">Adicionar Novo Produto</CardTitle>
           <CardDescription>
-            Capture uma foto da etiqueta do produto para preencher os detalhes automaticamente ou preencha manualmente.
+            Capture uma foto da etiqueta para preencher os detalhes ou preencha manualmente.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -191,8 +209,53 @@ export default function AddProductPage() {
             </Button>
 
             <div className="space-y-2">
-              <Label htmlFor="nome">Nome do Produto</Label>
-              <Input id="nome" {...form.register('nome')} placeholder="Ex: Leite Integral" />
+              <Label>Nome do Produto</Label>
+               <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={comboboxOpen}
+                    className="w-full justify-between font-normal"
+                  >
+                    {form.getValues('nome')
+                      ? productNames.find((p) => p.nome === form.getValues('nome'))?.nome
+                      : "Selecione ou digite um nome"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                  <Command>
+                    <CommandInput 
+                      placeholder="Buscar nome do produto..."
+                      onValueChange={(search) => form.setValue('nome', search)}
+                     />
+                    <CommandEmpty>Nenhum produto encontrado.</CommandEmpty>
+                    <CommandList>
+                      <CommandGroup>
+                        {productNames.map((p) => (
+                          <CommandItem
+                            key={p.id}
+                            value={p.nome}
+                            onSelect={(currentValue) => {
+                              form.setValue("nome", currentValue === form.getValues('nome') ? "" : currentValue, { shouldValidate: true });
+                              setComboboxOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                form.getValues('nome') === p.nome ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {p.nome}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               {form.formState.errors.nome && <p className="text-sm font-medium text-destructive">{form.formState.errors.nome.message}</p>}
             </div>
 
