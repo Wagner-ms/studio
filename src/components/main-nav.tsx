@@ -37,8 +37,9 @@ export function MainNav() {
         <SidebarMenu>
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.href}>
-              <Link href={item.href} legacyBehavior passHref>
+              <Link href={item.href} passHref>
                 <SidebarMenuButton
+                  as="a"
                   isActive={pathname === item.href}
                   tooltip={item.label}
                 >
@@ -51,14 +52,12 @@ export function MainNav() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-4">
-        <Link href="/add" passHref legacyBehavior>
-          <Button asChild className="w-full">
-            <a>
-              <PlusCircle />
-              Adicionar Produto
-            </a>
-          </Button>
-        </Link>
+        <Button asChild className="w-full">
+          <Link href="/add">
+            <PlusCircle />
+            Adicionar Produto
+          </Link>
+        </Button>
       </SidebarFooter>
     </Sidebar>
   );

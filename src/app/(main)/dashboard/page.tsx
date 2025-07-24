@@ -19,11 +19,9 @@ export default function DashboardPage() {
             Gerencie e acompanhe seus produtos perecíveis.
           </p>
         </div>
-        <Link href="/add" passHref legacyBehavior>
-          <Button asChild>
-            <a><PlusCircle /> Adicionar Novo Produto</a>
-          </Button>
-        </Link>
+        <Button asChild>
+          <Link href="/add"><PlusCircle /> Adicionar Novo Produto</Link>
+        </Button>
       </header>
 
       {loading ? (
@@ -38,11 +36,9 @@ export default function DashboardPage() {
           <p className="text-muted-foreground mt-2 mb-6">
             Comece adicionando seu primeiro produto.
           </p>
-          <Link href="/add" passHref legacyBehavior>
-            <Button asChild>
-              <a><PlusCircle /> Adicionar Produto</a>
-            </Button>
-          </Link>
+          <Button asChild>
+            <Link href="/add"><PlusCircle /> Adicionar Produto</Link>
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
