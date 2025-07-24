@@ -20,9 +20,9 @@ export function MainNav() {
   const pathname = usePathname();
 
   const menuItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/reports', label: 'Reports', icon: BarChart3 },
-    { href: '/notifications', label: 'Notifications', icon: Bell },
+    { href: '/dashboard', label: 'Painel', icon: LayoutDashboard },
+    { href: '/reports', label: 'Relatórios', icon: BarChart3 },
+    { href: '/notifications', label: 'Notificações', icon: Bell },
   ];
 
   return (
@@ -55,7 +55,7 @@ export function MainNav() {
           <Button asChild className="w-full">
             <a>
               <PlusCircle />
-              Add Product
+              Adicionar Produto
             </a>
           </Button>
         </Link>

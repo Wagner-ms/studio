@@ -7,9 +7,9 @@ import { db, storage } from './firebase';
 import { revalidatePath } from 'next/cache';
 
 const ProductSchema = z.object({
-  nome: z.string().min(1, 'Product name is required'),
-  lote: z.string().min(1, 'Lot number is required'),
-  validade: z.string().min(1, 'Expiration date is required'),
+  nome: z.string().min(1, 'O nome do produto é obrigatório'),
+  lote: z.string().min(1, 'O número do lote é obrigatório'),
+  validade: z.string().min(1, 'A data de validade é obrigatória'),
 });
 
 export async function addProductAction(formData: FormData) {
@@ -26,7 +26,7 @@ export async function addProductAction(formData: FormData) {
 
     const imageFile = formData.get('fotoEtiqueta') as File;
     if (!imageFile || imageFile.size === 0) {
-      return { success: false, error: { fotoEtiqueta: ['Image is required.'] } };
+      return { success: false, error: { fotoEtiqueta: ['A imagem é obrigatória.'] } };
     }
 
     // Upload image to Firebase Storage
@@ -50,7 +50,7 @@ export async function addProductAction(formData: FormData) {
     return { success: true };
   } catch (error) {
     console.error('Error adding product:', error);
-    let errorMessage = 'An unexpected error occurred.';
+    let errorMessage = 'Ocorreu um erro inesperado.';
     if (error instanceof Error) {
         errorMessage = error.message;
     }

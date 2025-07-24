@@ -14,14 +14,14 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-8">
       <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold font-headline tracking-tight">Product Dashboard</h1>
+          <h1 className="text-3xl font-bold font-headline tracking-tight">Painel de Produtos</h1>
           <p className="text-muted-foreground">
-            Manage and track your perishable products.
+            Gerencie e acompanhe seus produtos perecíveis.
           </p>
         </div>
         <Link href="/add" passHref legacyBehavior>
           <Button asChild>
-            <a><PlusCircle /> Add New Product</a>
+            <a><PlusCircle /> Adicionar Novo Produto</a>
           </Button>
         </Link>
       </header>
@@ -34,13 +34,13 @@ export default function DashboardPage() {
         </div>
       ) : products.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-center py-20 border-2 border-dashed rounded-lg">
-          <h2 className="text-2xl font-semibold font-headline">No Products Found</h2>
+          <h2 className="text-2xl font-semibold font-headline">Nenhum Produto Encontrado</h2>
           <p className="text-muted-foreground mt-2 mb-6">
-            Get started by adding your first product.
+            Comece adicionando seu primeiro produto.
           </p>
           <Link href="/add" passHref legacyBehavior>
             <Button asChild>
-              <a><PlusCircle /> Add Product</a>
+              <a><PlusCircle /> Adicionar Produto</a>
             </Button>
           </Link>
         </div>

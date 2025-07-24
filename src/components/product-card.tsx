@@ -34,19 +34,19 @@ const statusStyles: Record<ExpirationStatus, {
     icon: XCircle,
     badgeVariant: 'destructive',
     cardClass: 'border-destructive/50 hover:border-destructive',
-    text: 'Expired'
+    text: 'Vencido'
   },
   expiringSoon: {
     icon: AlertTriangle,
     badgeVariant: 'warning',
     cardClass: 'border-warning/50 hover:border-warning',
-    text: 'Expiring Soon'
+    text: 'Venc. Próximo'
   },
   safe: {
     icon: CheckCircle2,
     badgeVariant: 'default',
     cardClass: 'border-transparent hover:border-primary/50',
-    text: 'Safe'
+    text: 'OK'
   },
 };
 
@@ -60,7 +60,7 @@ export function ProductCard({ product }: { product: Product }) {
       <CardHeader>
         <CardTitle className="font-headline line-clamp-2">{product.nome}</CardTitle>
         <CardDescription className="flex items-center gap-2 pt-1">
-          <Tag className="w-4 h-4" /> Lot: {product.lote}
+          <Tag className="w-4 h-4" /> Lote: {product.lote}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
@@ -69,14 +69,14 @@ export function ProductCard({ product }: { product: Product }) {
           {text}
         </Badge>
         <p className="text-sm text-muted-foreground">
-          Expires on: <span className="font-medium text-foreground">{formatDate(expirationDate)}</span>
+          Vence em: <span className="font-medium text-foreground">{formatDate(expirationDate)}</span>
         </p>
       </CardContent>
       <CardFooter>
         <Dialog>
           <DialogTrigger asChild>
             <Button variant="outline" className="w-full">
-              <Eye className="mr-2" /> View Label
+              <Eye className="mr-2" /> Ver Etiqueta
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
@@ -86,7 +86,7 @@ export function ProductCard({ product }: { product: Product }) {
             <div className="relative w-full aspect-video mt-4 rounded-md overflow-hidden">
                <Image
                 src={product.fotoEtiqueta}
-                alt={`Label for ${product.nome}`}
+                alt={`Etiqueta para ${product.nome}`}
                 layout="fill"
                 objectFit="contain"
                 data-ai-hint="product label"

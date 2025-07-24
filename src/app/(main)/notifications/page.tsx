@@ -17,9 +17,9 @@ export default function NotificationsPage() {
   return (
     <div className="flex flex-col gap-8">
       <header>
-        <h1 className="text-3xl font-bold font-headline tracking-tight">Notifications</h1>
+        <h1 className="text-3xl font-bold font-headline tracking-tight">Notificações</h1>
         <p className="text-muted-foreground">
-          Products that require your attention.
+          Produtos que requerem sua atenção.
         </p>
       </header>
 
@@ -34,9 +34,9 @@ export default function NotificationsPage() {
            <div className="p-4 bg-green-100 dark:bg-green-900/20 rounded-full mb-4">
              <Check className="h-12 w-12 text-green-600 dark:text-green-400" />
            </div>
-          <h2 className="text-2xl font-semibold font-headline">All Clear!</h2>
+          <h2 className="text-2xl font-semibold font-headline">Tudo certo!</h2>
           <p className="text-muted-foreground mt-2">
-            No products are currently expired or expiring soon.
+            Nenhum produto está vencido ou com vencimento próximo.
           </p>
         </div>
       ) : (

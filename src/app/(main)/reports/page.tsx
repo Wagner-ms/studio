@@ -11,9 +11,9 @@ export default function ReportsPage() {
   const { loading, expiredCount, expiringSoonCount, safeCount, totalCount } = useProducts();
 
   const chartData = [
-    { name: 'Safe', count: safeCount, fill: 'var(--color-safe)' },
-    { name: 'Expiring Soon', count: expiringSoonCount, fill: 'var(--color-warning)' },
-    { name: 'Expired', count: expiredCount, fill: 'var(--color-expired)' },
+    { name: 'OK', count: safeCount, fill: 'var(--color-safe)' },
+    { name: 'Venc. Próximo', count: expiringSoonCount, fill: 'var(--color-warning)' },
+    { name: 'Vencido', count: expiredCount, fill: 'var(--color-expired)' },
   ];
   
   const StatCard = ({ title, value, icon: Icon, colorClass, isLoading }: { title: string, value: number, icon: React.ElementType, colorClass: string, isLoading: boolean }) => (
@@ -35,22 +35,22 @@ export default function ReportsPage() {
   return (
     <div className="flex flex-col gap-8">
       <header>
-        <h1 className="text-3xl font-bold font-headline tracking-tight">Inventory Reports</h1>
+        <h1 className="text-3xl font-bold font-headline tracking-tight">Relatórios do Inventário</h1>
         <p className="text-muted-foreground">
-          An overview of your product expiration statuses.
+          Uma visão geral dos status de validade de seus produtos.
         </p>
       </header>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Total Products" value={totalCount} icon={Package} colorClass="" isLoading={loading} />
-        <StatCard title="Safe" value={safeCount} icon={CheckCircle2} colorClass="text-green-500" isLoading={loading} />
-        <StatCard title="Expiring Soon" value={expiringSoonCount} icon={AlertTriangle} colorClass="text-yellow-500" isLoading={loading} />
-        <StatCard title="Expired" value={expiredCount} icon={XCircle} colorClass="text-red-500" isLoading={loading} />
+        <StatCard title="Total de Produtos" value={totalCount} icon={Package} colorClass="" isLoading={loading} />
+        <StatCard title="OK" value={safeCount} icon={CheckCircle2} colorClass="text-green-500" isLoading={loading} />
+        <StatCard title="Vencimento Próximo" value={expiringSoonCount} icon={AlertTriangle} colorClass="text-yellow-500" isLoading={loading} />
+        <StatCard title="Vencidos" value={expiredCount} icon={XCircle} colorClass="text-red-500" isLoading={loading} />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline">Products Status Overview</CardTitle>
+          <CardTitle className="font-headline">Visão Geral do Status dos Produtos</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
