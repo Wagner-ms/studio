@@ -19,7 +19,7 @@ async function ensureProductNameExists(productName: string) {
 
     if (querySnapshot.empty) {
         const batch = writeBatch(db);
-        const newNameRef = doc(productNamesRef);
+        const newNameRef = doc(collection(db, 'nomesDeProdutos'));
         batch.set(newNameRef, { nome: productName, criadoEm: Timestamp.now() });
         await batch.commit();
     }
@@ -48,10 +48,14 @@ export async function addProductAction(formData: FormData) {
       const uploadResult = await uploadBytes(storageRef, imageFile);
       fotoEtiqueta = await getDownloadURL(uploadResult.ref);
     }
+    
+    // Create date object from YYYY-MM-DD string at UTC to avoid timezone issues.
+    const dateParts = parsed.data.validade.split('-').map(Number);
+    const validadeDate = new Date(Date.UTC(dateParts[0], dateParts[1] - 1, dateParts[2]));
 
     const newProduct = {
       ...parsed.data,
-      validade: Timestamp.fromDate(new Date(parsed.data.validade)),
+      validade: Timestamp.fromDate(validadeDate),
       fotoEtiqueta,
       criadoEm: Timestamp.now(),
       alertado: false,
