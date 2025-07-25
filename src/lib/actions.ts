@@ -38,9 +38,9 @@ export async function addProductAction(productData: {
   const validatedFields = ProductSchema.safeParse(productData);
 
   if (!validatedFields.success) {
-    // This case should ideally be handled by client-side validation,
-    // but as a fallback, we redirect with an error.
-    return redirect('/add?error=' + encodeURIComponent(validatedFields.error.errors.map(e => e.message).join(', ')));
+     // Este erro não deve acontecer com a validação do lado do cliente, mas é um fallback.
+     // Retornar um objeto de erro em vez de redirecionar.
+     return { success: false, error: validatedFields.error.flatten().fieldErrors };
   }
 
   const { nome, lote, validade, fotoEtiquetaUrl } = validatedFields.data;
@@ -61,15 +61,17 @@ export async function addProductAction(productData: {
   } catch (error) {
     console.error('Erro ao adicionar produto:', error);
     const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
-    // Redirect with a generic error message
-    return redirect('/add?error=' + encodeURIComponent(`Não foi possível salvar o produto. Detalhe: ${errorMessage}`));
+    // Retornar um objeto de erro para o cliente.
+    return { success: false, error: `Não foi possível salvar o produto: ${errorMessage}` };
   }
 
+  // Revalidar os caches para mostrar o novo produto.
   revalidatePath('/dashboard');
   revalidatePath('/add');
   revalidatePath('/notifications');
   revalidatePath('/reports');
   
+  // Redirecionar para o painel principal após o sucesso.
   redirect('/dashboard');
 }
 
@@ -83,6 +85,7 @@ export async function deleteProductAction(productId: string) {
     const productRef = adminDb.collection('produtos').doc(productId);
     await productRef.delete();
 
+    // Revalidar os caches após a exclusão.
     revalidatePath('/dashboard');
     revalidatePath('/notifications');
     revalidatePath('/reports');
