@@ -37,12 +37,18 @@ export async function addProductAction(productData: {
   fotoEtiquetaUrl: string;
 }) {
   if (!adminDb) {
-    throw new Error("Firebase Admin SDK não foi inicializado corretamente.");
+    const errorMessage = "Falha na conexão com o servidor. Verifique as credenciais do Firebase.";
+    console.error(errorMessage);
+    // Redireciona com uma mensagem de erro clara
+    redirect(`/add?error=${encodeURIComponent(errorMessage)}`);
   }
+  
   const validatedFields = ProductSchema.safeParse(productData);
 
   if (!validatedFields.success) {
-     redirect(`/add?error=${encodeURIComponent(validatedFields.error.flatten().fieldErrors.toString())}`);
+     const validationErrors = validatedFields.error.flatten().fieldErrors;
+     const firstError = Object.values(validationErrors)[0]?.[0] || 'Erro de validação desconhecido.';
+     redirect(`/add?error=${encodeURIComponent(firstError)}`);
   }
   
   const { nome, lote, validade, fotoEtiquetaUrl } = validatedFields.data;
@@ -50,6 +56,7 @@ export async function addProductAction(productData: {
   try {
     await ensureProductNameExists(nome);
     const [year, month, day] = validade.split('-').map(Number);
+    // A data UTC é importante para evitar problemas de fuso horário
     const validadeDate = new Date(Date.UTC(year, month - 1, day));
     
     await adminDb.collection('produtos').add({
@@ -66,20 +73,20 @@ export async function addProductAction(productData: {
     redirect(`/add?error=${encodeURIComponent(errorMessage)}`);
   }
 
-  // Revalidar os caches para mostrar o novo produto.
   revalidatePath('/dashboard');
   revalidatePath('/add');
   revalidatePath('/notifications');
   revalidatePath('/reports');
   
-  // Redirecionar para o painel principal após o sucesso.
   redirect('/dashboard');
 }
 
 export async function deleteProductAction(productId: string) {
   if (!adminDb) {
-    throw new Error("Firebase Admin SDK não foi inicializado corretamente.");
+    console.error("Firebase Admin SDK não foi inicializado corretamente ao tentar excluir.");
+    return { success: false, error: 'Falha na conexão com o servidor.' };
   }
+
   if (!productId) {
     return { success: false, error: 'ID do produto não fornecido.' };
   }
