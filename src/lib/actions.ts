@@ -1,9 +1,8 @@
-
 'use server';
 
 import { z } from 'zod';
-import { addDoc, collection, Timestamp, deleteDoc, doc, query, where, getDocs, setDoc } from 'firebase/firestore';
-import { db } from './firebase';
+import { Timestamp } from 'firebase-admin/firestore';
+import { adminDb } from './firebase-admin';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
@@ -16,18 +15,17 @@ const ProductSchema = z.object({
   fotoEtiquetaUrl: z.string().url().optional().or(z.literal('')),
 });
 
-
 async function ensureProductNameExists(productName: string) {
     const trimmedName = productName.trim();
     if (!trimmedName) return;
 
-    const productNamesRef = collection(db, 'nomesDeProdutos');
-    const q = query(productNamesRef, where('nome', '==', trimmedName));
-    const querySnapshot = await getDocs(q);
+    const productNamesRef = adminDb.collection('nomesDeProdutos');
+    const q = productNamesRef.where('nome', '==', trimmedName);
+    const querySnapshot = await q.get();
 
     if (querySnapshot.empty) {
-        const newNameRef = doc(collection(db, 'nomesDeProdutos'));
-        await setDoc(newNameRef, { nome: trimmedName, criadoEm: Timestamp.now() });
+        const newNameRef = adminDb.collection('nomesDeProdutos').doc();
+        await newNameRef.set({ nome: trimmedName, criadoEm: Timestamp.now() });
     }
 }
 
@@ -36,25 +34,23 @@ export async function addProductAction(productData: {
   lote: string;
   validade: string;
   fotoEtiquetaUrl: string;
-}): Promise<{ success: boolean; error?: string }> {
+}) {
   const validatedFields = ProductSchema.safeParse(productData);
 
   if (!validatedFields.success) {
-    return {
-      success: false,
-      error: validatedFields.error.errors.map(e => e.message).join(', '),
-    };
+    // This case should ideally be handled by client-side validation,
+    // but as a fallback, we redirect with an error.
+    return redirect('/add?error=' + encodeURIComponent(validatedFields.error.errors.map(e => e.message).join(', ')));
   }
-  
+
   const { nome, lote, validade, fotoEtiquetaUrl } = validatedFields.data;
   
   try {
     await ensureProductNameExists(nome);
-
     const [year, month, day] = validade.split('-').map(Number);
     const validadeDate = new Date(Date.UTC(year, month - 1, day));
     
-    await addDoc(collection(db, 'produtos'), {
+    await adminDb.collection('produtos').add({
       nome,
       lote,
       validade: Timestamp.fromDate(validadeDate),
@@ -65,7 +61,8 @@ export async function addProductAction(productData: {
   } catch (error) {
     console.error('Erro ao adicionar produto:', error);
     const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
-    return { success: false, error: `Não foi possível salvar o produto. Detalhe: ${errorMessage}` };
+    // Redirect with a generic error message
+    return redirect('/add?error=' + encodeURIComponent(`Não foi possível salvar o produto. Detalhe: ${errorMessage}`));
   }
 
   revalidatePath('/dashboard');
@@ -76,23 +73,19 @@ export async function addProductAction(productData: {
   redirect('/dashboard');
 }
 
-export async function deleteProductAction(productId: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteProductAction(productId: string) {
   if (!productId) {
-    return { success: false, error: 'ID do produto não fornecido.' };
+    // This should not happen if called from the UI
+    console.error('ID do produto não fornecido para exclusão.');
+    return;
   }
 
   try {
-    const productRef = doc(db, 'produtos', productId);
-    await deleteDoc(productRef);
+    const productRef = adminDb.collection('produtos').doc(productId);
+    await productRef.delete();
   } catch (error) {
     console.error('Erro ao excluir produto:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
-    return { success: false, error: `Não foi possível excluir o produto. Detalhe: ${errorMessage}` };
+    // In a real app, you might want to handle this more gracefully
   }
 
-  revalidatePath('/dashboard');
-  revalidatePath('/notifications');
-  revalidatePath('/reports');
-
-  return { success: true };
-}
+  re

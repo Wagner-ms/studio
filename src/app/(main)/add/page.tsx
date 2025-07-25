@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { z } from 'zod';
@@ -23,6 +23,8 @@ import type { ProductName } from '@/lib/types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 const FormSchema = z.object({
   nome: z.string().min(1, 'O nome do produto é obrigatório'),
@@ -45,12 +47,14 @@ async function getProductNames(): Promise<ProductName[]> {
 
 export default function AddProductPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [imagePreview, setImagePreview] = React.useState<string | null>(null);
   const [isOcrLoading, setIsOcrLoading] = React.useState(false);
   const [productNames, setProductNames] = React.useState<ProductName[]>([]);
   const [comboboxOpen, setComboboxOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState('');
+  const [serverError, setServerError] = React.useState<string | null>(searchParams.get('error'));
 
   const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
@@ -143,6 +147,7 @@ export default function AddProductPage() {
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsSubmitting(true);
+    setServerError(null);
     try {
         let fotoEtiquetaUrl = '';
         const imageFile = data.fotoEtiquetaFile;
@@ -159,29 +164,21 @@ export default function AddProductPage() {
           validade: data.validade,
           fotoEtiquetaUrl: fotoEtiquetaUrl,
         };
+        
+        // Let the action handle success and redirects
+        await addProductAction(productData);
 
-        const result = await addProductAction(productData);
-
-        if (result && result.error) {
-          toast({
-            variant: 'destructive',
-            title: 'Erro ao salvar',
-            description: result.error,
-          });
-        } else {
-           toast({
-            title: 'Produto adicionado!',
-            description: `${data.nome} foi salvo com sucesso.`,
-          });
-        }
-    } catch (error) {
-        console.error("Erro inesperado no formulário:", error);
+        // If addProductAction throws an error that is not a redirect, it will be caught below
         toast({
-            variant: 'destructive',
-            title: 'Erro inesperado',
-            description: 'Ocorreu um erro inesperado. Tente novamente.',
+          title: 'Produto adicionado!',
+          description: `${data.nome} foi salvo com sucesso.`,
         });
-    } finally {
+
+    } catch (error) {
+        // This catch block might now be less likely to be hit if the action handles all redirects,
+        // but it's good for catching unexpected client-side errors (e.g., storage upload fails).
+        console.error("Erro inesperado no formulário:", error);
+        setServerError('Ocorreu um erro inesperado. Tente novamente.');
         setIsSubmitting(false);
     }
   };
@@ -202,6 +199,15 @@ export default function AddProductPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            
+            {serverError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Erro no Servidor</AlertTitle>
+                <AlertDescription>{serverError}</AlertDescription>
+              </Alert>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="fotoEtiqueta">Foto da Etiqueta (Opcional)</Label>
               <Input
@@ -212,10 +218,11 @@ export default function AddProductPage() {
                 ref={fileInputRef}
                 className="hidden"
                 onChange={handleImageChange}
+                disabled={isSubmitting}
               />
               <div
                 className="w-full aspect-video border-2 border-dashed rounded-lg flex items-center justify-center text-muted-foreground hover:border-primary transition-colors cursor-pointer"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => !isSubmitting && fileInputRef.current?.click()}
               >
                 {imagePreview ? (
                   <Image src={imagePreview} alt="Pré-visualização da etiqueta do produto" width={400} height={225} className="object-contain h-full w-full" data-ai-hint="product label"/>
@@ -233,7 +240,7 @@ export default function AddProductPage() {
               variant="outline"
               className="w-full"
               onClick={handleOcr}
-              disabled={!imagePreview || isOcrLoading}
+              disabled={!imagePreview || isOcrLoading || isSubmitting}
             >
               {isOcrLoading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -252,6 +259,7 @@ export default function AddProductPage() {
                     role="combobox"
                     aria-expanded={comboboxOpen}
                     className="w-full justify-between font-normal"
+                    disabled={isSubmitting}
                   >
                     {selectedProductName || "Selecione ou crie um novo"}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -313,13 +321,13 @@ export default function AddProductPage() {
 
             <div className="space-y-2">
               <Label htmlFor="lote">Número do Lote</Label>
-              <Input id="lote" {...form.register('lote')} placeholder="Ex: L12345" />
+              <Input id="lote" {...form.register('lote')} placeholder="Ex: L12345" disabled={isSubmitting}/>
               {form.formState.errors.lote && <p className="text-sm font-medium text-destructive">{form.formState.errors.lote.message}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="validade">Data de Validade</Label>
-              <Input id="validade" type="date" {...form.register('validade')} />
+              <Input id="validade" type="date" {...form.register('validade')} disabled={isSubmitting}/>
               {form.formState.errors.validade && <p className="text-sm font-medium text-destructive">{form.formState.errors.validade.message}</p>}
             </div>
 
@@ -331,9 +339,3 @@ export default function AddProductPage() {
               )}
               Salvar Produto
             </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
