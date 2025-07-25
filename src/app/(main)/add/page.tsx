@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -161,17 +162,16 @@ export default function AddProductPage() {
 
         const result = await addProductAction(productData);
 
-        if (result.success) {
-          toast({
-            title: 'Produto adicionado!',
-            description: `${data.nome} foi salvo com sucesso.`,
-          });
-          router.push('/dashboard');
-        } else {
+        if (result && result.error) {
           toast({
             variant: 'destructive',
             title: 'Erro ao salvar',
             description: result.error,
+          });
+        } else {
+           toast({
+            title: 'Produto adicionado!',
+            description: `${data.nome} foi salvo com sucesso.`,
           });
         }
     } catch (error) {

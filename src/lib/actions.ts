@@ -1,9 +1,11 @@
+
 'use server';
 
 import { z } from 'zod';
 import { addDoc, collection, Timestamp, deleteDoc, doc, query, where, getDocs, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
 const ProductSchema = z.object({
   nome: z.string().trim().min(1, 'O nome do produto é obrigatório'),
@@ -70,8 +72,8 @@ export async function addProductAction(productData: {
   revalidatePath('/add');
   revalidatePath('/notifications');
   revalidatePath('/reports');
-
-  return { success: true };
+  
+  redirect('/dashboard');
 }
 
 export async function deleteProductAction(productId: string): Promise<{ success: boolean; error?: string }> {
