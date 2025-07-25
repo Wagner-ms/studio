@@ -16,6 +16,7 @@ const ProductSchema = z.object({
 });
 
 async function ensureProductNameExists(productName: string) {
+    if (!adminDb) throw new Error("Firebase Admin not initialized");
     const trimmedName = productName.trim();
     if (!trimmedName) return;
 
@@ -35,14 +36,15 @@ export async function addProductAction(productData: {
   validade: string;
   fotoEtiquetaUrl: string;
 }) {
+  if (!adminDb) {
+    throw new Error("Firebase Admin SDK não foi inicializado corretamente.");
+  }
   const validatedFields = ProductSchema.safeParse(productData);
 
   if (!validatedFields.success) {
-     // Este erro não deve acontecer com a validação do lado do cliente, mas é um fallback.
-     // Retornar um objeto de erro em vez de redirecionar.
-     return { success: false, error: validatedFields.error.flatten().fieldErrors };
+     redirect(`/add?error=${encodeURIComponent(validatedFields.error.flatten().fieldErrors.toString())}`);
   }
-
+  
   const { nome, lote, validade, fotoEtiquetaUrl } = validatedFields.data;
   
   try {
@@ -61,8 +63,7 @@ export async function addProductAction(productData: {
   } catch (error) {
     console.error('Erro ao adicionar produto:', error);
     const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
-    // Retornar um objeto de erro para o cliente.
-    return { success: false, error: `Não foi possível salvar o produto: ${errorMessage}` };
+    redirect(`/add?error=${encodeURIComponent(errorMessage)}`);
   }
 
   // Revalidar os caches para mostrar o novo produto.
@@ -76,8 +77,10 @@ export async function addProductAction(productData: {
 }
 
 export async function deleteProductAction(productId: string) {
+  if (!adminDb) {
+    throw new Error("Firebase Admin SDK não foi inicializado corretamente.");
+  }
   if (!productId) {
-    console.error('ID do produto não fornecido para exclusão.');
     return { success: false, error: 'ID do produto não fornecido.' };
   }
 
@@ -85,7 +88,6 @@ export async function deleteProductAction(productId: string) {
     const productRef = adminDb.collection('produtos').doc(productId);
     await productRef.delete();
 
-    // Revalidar os caches após a exclusão.
     revalidatePath('/dashboard');
     revalidatePath('/notifications');
     revalidatePath('/reports');
