@@ -165,18 +165,14 @@ export default function AddProductPage() {
           fotoEtiquetaUrl: fotoEtiquetaUrl,
         };
         
-        // Let the action handle success and redirects
         await addProductAction(productData);
 
-        // If addProductAction throws an error that is not a redirect, it will be caught below
         toast({
           title: 'Produto adicionado!',
           description: `${data.nome} foi salvo com sucesso.`,
         });
 
     } catch (error) {
-        // This catch block might now be less likely to be hit if the action handles all redirects,
-        // but it's good for catching unexpected client-side errors (e.g., storage upload fails).
         console.error("Erro inesperado no formulário:", error);
         setServerError('Ocorreu um erro inesperado. Tente novamente.');
         setIsSubmitting(false);
@@ -339,3 +335,9 @@ export default function AddProductPage() {
               )}
               Salvar Produto
             </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

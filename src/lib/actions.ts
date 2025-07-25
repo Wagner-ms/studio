@@ -75,17 +75,22 @@ export async function addProductAction(productData: {
 
 export async function deleteProductAction(productId: string) {
   if (!productId) {
-    // This should not happen if called from the UI
     console.error('ID do produto não fornecido para exclusão.');
-    return;
+    return { success: false, error: 'ID do produto não fornecido.' };
   }
 
   try {
     const productRef = adminDb.collection('produtos').doc(productId);
     await productRef.delete();
+
+    revalidatePath('/dashboard');
+    revalidatePath('/notifications');
+    revalidatePath('/reports');
+    
+    return { success: true };
   } catch (error) {
     console.error('Erro ao excluir produto:', error);
-    // In a real app, you might want to handle this more gracefully
+    const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
+    return { success: false, error: errorMessage };
   }
-
-  re
+}
