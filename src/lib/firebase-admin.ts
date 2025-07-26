@@ -1,6 +1,4 @@
 
-'use server';
-
 import * as admin from 'firebase-admin';
 
 // Garante que a inicialização do app admin só aconteça uma vez
