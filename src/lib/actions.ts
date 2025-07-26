@@ -38,7 +38,7 @@ export async function addProductAction(productData: {
   fotoEtiquetaUrl: string;
 }) {
   if (!adminDb) {
-    throw new Error("Falha na conexão com o servidor. Verifique as credenciais do Firebase.");
+    throw new Error("Falha na conexão com o servidor. Verifique as credenciais do Firebase Admin.");
   }
   
   const validatedFields = ProductSchema.safeParse(productData);
@@ -73,13 +73,11 @@ export async function addProductAction(productData: {
   revalidatePath('/dashboard');
   revalidatePath('/notifications');
   revalidatePath('/reports');
-  // O redirecionamento no cliente cuidará da navegação.
-  // redirect('/dashboard');
 }
 
 export async function deleteProductAction(productId: string) {
   if (!adminDb) {
-    throw new Error('Falha na conexão com o servidor.');
+    throw new Error('Falha na conexão com o servidor. Verifique as credenciais do Firebase Admin.');
   }
 
   if (!productId) {
@@ -98,7 +96,6 @@ export async function deleteProductAction(productId: string) {
   } catch (error) {
     console.error('Erro ao excluir produto:', error);
     const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
-    // Lançar um erro aqui também para consistência
     throw new Error(errorMessage);
   }
 }
