@@ -3,21 +3,25 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, Bell, LayoutDashboard, PlusCircle } from 'lucide-react';
+import { BarChart3, Bell, LayoutDashboard, PanelLeft, PlusCircle } from 'lucide-react';
 import { ValicareLogo } from '@/components/icons';
 import {
   Sidebar,
-  SidebarHeader,
   SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Button } from './ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function MainNav() {
   const pathname = usePathname();
+  const isMobile = useIsMobile();
 
   const menuItems = [
     { href: '/dashboard', label: 'Painel', icon: LayoutDashboard },
@@ -25,8 +29,8 @@ export function MainNav() {
     { href: '/notifications', label: 'Notificações', icon: Bell },
   ];
 
-  return (
-    <Sidebar>
+  const NavContent = () => (
+    <>
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
           <ValicareLogo className="w-8 h-8 text-primary" />
@@ -52,13 +56,41 @@ export function MainNav() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="p-4">
-         <Button asChild className="w-full">
-           <Link href="/add">
-             <PlusCircle />
-             <span>Adicionar Produto</span>
-           </Link>
-         </Button>
+        <Button asChild className="w-full">
+          <Link href="/add">
+            <PlusCircle />
+            <span>Adicionar Produto</span>
+          </Link>
+        </Button>
       </SidebarFooter>
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button size="icon" variant="outline" className="sm:hidden">
+              <PanelLeft className="h-5 w-5" />
+              <span className="sr-only">Toggle Menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="sm:max-w-xs flex flex-col p-0">
+             <NavContent />
+          </SheetContent>
+        </Sheet>
+         <div className="flex items-center gap-2 sm:hidden">
+           <ValicareLogo className="w-7 h-7 text-primary" />
+           <h1 className="text-lg font-headline font-semibold">Valicare</h1>
+         </div>
+      </header>
+    );
+  }
+
+  return (
+    <Sidebar className="hidden sm:flex sm:flex-col">
+       <NavContent />
     </Sidebar>
   );
 }
