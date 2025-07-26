@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -37,10 +38,7 @@ export async function addProductAction(productData: {
   fotoEtiquetaUrl: string;
 }) {
   if (!adminDb) {
-    const errorMessage = "Falha na conexão com o servidor. Verifique as credenciais do Firebase.";
-    console.error(errorMessage);
-    // Redireciona com uma mensagem de erro clara
-    redirect(`/add?error=${encodeURIComponent(errorMessage)}`);
+    throw new Error("Falha na conexão com o servidor. Verifique as credenciais do Firebase.");
   }
   
   const validatedFields = ProductSchema.safeParse(productData);
@@ -48,7 +46,7 @@ export async function addProductAction(productData: {
   if (!validatedFields.success) {
      const validationErrors = validatedFields.error.flatten().fieldErrors;
      const firstError = Object.values(validationErrors)[0]?.[0] || 'Erro de validação desconhecido.';
-     redirect(`/add?error=${encodeURIComponent(firstError)}`);
+     throw new Error(firstError);
   }
   
   const { nome, lote, validade, fotoEtiquetaUrl } = validatedFields.data;
@@ -56,7 +54,6 @@ export async function addProductAction(productData: {
   try {
     await ensureProductNameExists(nome);
     const [year, month, day] = validade.split('-').map(Number);
-    // A data UTC é importante para evitar problemas de fuso horário
     const validadeDate = new Date(Date.UTC(year, month - 1, day));
     
     await adminDb.collection('produtos').add({
@@ -70,25 +67,23 @@ export async function addProductAction(productData: {
   } catch (error) {
     console.error('Erro ao adicionar produto:', error);
     const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
-    redirect(`/add?error=${encodeURIComponent(errorMessage)}`);
+    throw new Error(errorMessage);
   }
 
   revalidatePath('/dashboard');
-  revalidatePath('/add');
   revalidatePath('/notifications');
   revalidatePath('/reports');
-  
-  redirect('/dashboard');
+  // O redirecionamento no cliente cuidará da navegação.
+  // redirect('/dashboard');
 }
 
 export async function deleteProductAction(productId: string) {
   if (!adminDb) {
-    console.error("Firebase Admin SDK não foi inicializado corretamente ao tentar excluir.");
-    return { success: false, error: 'Falha na conexão com o servidor.' };
+    throw new Error('Falha na conexão com o servidor.');
   }
 
   if (!productId) {
-    return { success: false, error: 'ID do produto não fornecido.' };
+    throw new Error('ID do produto não fornecido.');
   }
 
   try {
@@ -103,6 +98,7 @@ export async function deleteProductAction(productId: string) {
   } catch (error) {
     console.error('Erro ao excluir produto:', error);
     const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
-    return { success: false, error: errorMessage };
+    // Lançar um erro aqui também para consistência
+    throw new Error(errorMessage);
   }
 }

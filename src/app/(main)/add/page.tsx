@@ -171,10 +171,20 @@ export default function AddProductPage() {
           title: 'Produto adicionado!',
           description: `${data.nome} foi salvo com sucesso.`,
         });
+        
+        // O redirecionamento acontecerá no servidor, mas limpamos o estado de erro aqui.
+        router.push('/dashboard');
 
     } catch (error) {
-        console.error("Erro inesperado no formulário:", error);
-        setServerError('Ocorreu um erro inesperado. Tente novamente.');
+        console.error("Erro ao submeter formulário:", error);
+        const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro inesperado. Tente novamente.';
+        setServerError(errorMessage);
+        toast({
+            variant: 'destructive',
+            title: 'Erro ao Salvar Produto',
+            description: errorMessage,
+        });
+    } finally {
         setIsSubmitting(false);
     }
   };

@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -75,24 +76,17 @@ export function ProductCard({ product }: { product: Product }) {
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      const result = await deleteProductAction(product.id);
-      if (result.success) {
-          toast({
-            title: 'Produto excluído!',
-            description: `${product.nome} foi removido com sucesso.`,
-          });
-      } else {
-           toast({
-              variant: 'destructive',
-              title: 'Erro ao excluir',
-              description: result.error,
-            });
-      }
+      await deleteProductAction(product.id);
+      toast({
+        title: 'Produto excluído!',
+        description: `${product.nome} foi removido com sucesso.`,
+      });
     } catch (error) {
+       const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
        toast({
           variant: 'destructive',
-          title: 'Erro inesperado',
-          description: 'Não foi possível excluir o produto. Tente novamente.',
+          title: 'Erro ao excluir',
+          description: errorMessage,
         });
     } finally {
       setIsDeleting(false);
