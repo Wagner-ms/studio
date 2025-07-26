@@ -76,10 +76,6 @@ export function MainNav() {
   if (isMobile) {
     return (
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background px-4 sm:hidden">
-        <div className="flex items-center gap-2">
-           <ValicareLogo className="w-7 h-7 text-primary" />
-           <h1 className="text-lg font-headline font-semibold">Valicare</h1>
-         </div>
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <Button size="icon" variant="outline">
@@ -87,10 +83,14 @@ export function MainNav() {
               <span className="sr-only">Toggle Menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="flex w-full max-w-xs flex-col p-0">
+          <SheetContent side="left" className="flex w-full max-w-xs flex-col p-0">
              <NavContent />
           </SheetContent>
         </Sheet>
+         <div className="flex items-center gap-2">
+           <ValicareLogo className="w-7 h-7 text-primary" />
+           <h1 className="text-lg font-headline font-semibold">Valicare</h1>
+         </div>
       </header>
     );
   }
