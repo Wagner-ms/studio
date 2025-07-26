@@ -172,7 +172,6 @@ export default function AddProductPage() {
           description: `${data.nome} foi salvo com sucesso.`,
         });
         
-        // O redirecionamento acontecerá no servidor, mas limpamos o estado de erro aqui.
         router.push('/dashboard');
 
     } catch (error) {
