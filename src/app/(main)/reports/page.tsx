@@ -13,7 +13,7 @@ export default function ReportsPage() {
   const chartData = [
     { name: 'OK', count: safeCount, fill: 'var(--color-safe)' },
     { name: 'Venc. 5 dias', count: expiringSoonCount, fill: 'var(--color-warning)' },
-    { name: 'Venc. 2 dias', count: expiringIn2DaysCount, fill: 'var(--color-orange)' },
+    { name: 'Venc. até 2 dias', count: expiringIn2DaysCount, fill: 'var(--color-orange)' },
     { name: 'Vencido', count: expiredCount, fill: 'var(--color-destructive)' },
   ];
   
@@ -46,7 +46,7 @@ export default function ReportsPage() {
         <StatCard title="Total de Produtos" value={totalCount} icon={Package} colorClass="" isLoading={loading} />
         <StatCard title="OK" value={safeCount} icon={CheckCircle2} colorClass="text-primary" isLoading={loading} />
         <StatCard title="Venc. 5 dias" value={expiringSoonCount} icon={AlertTriangle} colorClass="text-yellow-500" isLoading={loading} />
-        <StatCard title="Venc. 2 dias" value={expiringIn2DaysCount} icon={AlertTriangle} colorClass="text-orange-500" isLoading={loading} />
+        <StatCard title="Venc. até 2 dias" value={expiringIn2DaysCount} icon={AlertTriangle} colorClass="text-orange-500" isLoading={loading} />
         <StatCard title="Vencidos" value={expiredCount} icon={XCircle} colorClass="text-red-500" isLoading={loading} />
       </div>
 

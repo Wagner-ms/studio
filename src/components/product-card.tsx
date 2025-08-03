@@ -56,7 +56,7 @@ const statusStyles: Record<ExpirationStatus, {
       icon: AlertTriangle,
       badgeVariant: 'orange',
       cardClass: 'border-orange-500/50 hover:border-orange-500',
-      text: 'Vence em 2 dias'
+      text: 'Vence em até 2 dias'
   },
   expiringSoon: {
     icon: AlertTriangle,
