@@ -16,7 +16,7 @@ export default function NotificationsPage() {
   });
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8 p-4 sm:p-6">
       <header>
         <h1 className="text-3xl font-bold font-headline tracking-tight">Notificações</h1>
         <p className="text-muted-foreground">

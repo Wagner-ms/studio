@@ -59,7 +59,7 @@ export default function DashboardPage() {
 
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8 p-4 sm:p-6">
       <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold font-headline tracking-tight">Painel de Produtos</h1>
