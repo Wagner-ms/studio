@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { differenceInDays, format, parseISO } from 'date-fns';
+import { differenceInDays, format, parseISO, startOfDay } from 'date-fns';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -10,8 +10,8 @@ export type ExpirationStatus = 'expired' | 'expiringIn2Days' | 'expiringSoon' | 
 
 export function getExpirationStatus(expirationDate: Date | string): ExpirationStatus {
   const date = typeof expirationDate === 'string' ? parseISO(expirationDate) : expirationDate;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Normalize today's date to the beginning of the day
+  // Use startOfDay to get the beginning of today in the local timezone, avoiding UTC issues.
+  const today = startOfDay(new Date());
   const daysUntilExpiration = differenceInDays(date, today);
 
   if (daysUntilExpiration < 0) {
