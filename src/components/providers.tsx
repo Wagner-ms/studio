@@ -2,10 +2,9 @@
 
 import * as React from 'react';
 
-// O SidebarProvider foi movido para o layout principal (/app/(main)/layout.tsx)
-// para encapsular a navegação e o conteúdo principal corretamente.
-// Este arquivo pode ser removido ou usado para outros providers globais no futuro.
-
+// Este componente não é mais necessário no layout raiz
+// e foi removido para simplificar a estrutura e corrigir bugs de layout.
+// Pode ser reutilizado no futuro, se necessário.
 export function Providers({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }

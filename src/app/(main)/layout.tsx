@@ -9,10 +9,10 @@ export default function MainLayout({
 }) {
   return (
     <SidebarProvider>
-        <MainNav />
-        <main className="flex-1 p-4 sm:p-6 bg-muted/40">
-          {children}
-        </main>
+      <MainNav />
+      <main className="flex-1 p-4 sm:p-6 bg-muted/40">
+        {children}
+      </main>
     </SidebarProvider>
   );
 }
