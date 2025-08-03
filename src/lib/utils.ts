@@ -10,9 +10,8 @@ export type ExpirationStatus = 'expired' | 'expiringIn2Days' | 'expiringSoon' | 
 
 export function getExpirationStatus(expirationDate: Date | string): ExpirationStatus {
   const date = typeof expirationDate === 'string' ? parseISO(expirationDate) : expirationDate;
-  // Use startOfDay to get the beginning of today in the local timezone, avoiding UTC issues.
   const today = startOfDay(new Date());
-  const daysUntilExpiration = differenceInDays(date, today);
+  const daysUntilExpiration = differenceInDays(startOfDay(date), today);
 
   if (daysUntilExpiration < 0) {
     return 'expired';
@@ -28,5 +27,22 @@ export function getExpirationStatus(expirationDate: Date | string): ExpirationSt
 
 export function formatDate(date: Date | string) {
   const dateObj = typeof date === 'string' ? parseISO(date) : date;
-  return format(dateObj, 'dd/MM/yyyy');
+  // Use startOfDay to handle timezone correctly from Firestore Timestamps
+  return format(startOfDay(dateObj), 'dd/MM/yyyy');
+}
+
+
+export function getExpirationStatusText(status: ExpirationStatus): string {
+    switch (status) {
+        case 'expired':
+            return 'Vencido';
+        case 'expiringIn2Days':
+            return 'Vence em até 2 dias';
+        case 'expiringSoon':
+            return 'Venc. Próximo';
+        case 'safe':
+            return 'OK';
+        default:
+            return '';
+    }
 }

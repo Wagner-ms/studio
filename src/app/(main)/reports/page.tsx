@@ -1,14 +1,18 @@
+
 'use client';
 
 import * as React from 'react';
 import { useProducts } from '@/hooks/use-products';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, CheckCircle2, Package, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Download, Package, XCircle } from 'lucide-react';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { formatDate, getExpirationStatus, getExpirationStatusText } from '@/lib/utils';
+import type { Product } from '@/lib/types';
 
 export default function ReportsPage() {
-  const { loading, expiredCount, expiringIn2DaysCount, expiringSoonCount, safeCount, totalCount } = useProducts();
+  const { products, loading, expiredCount, expiringIn2DaysCount, expiringSoonCount, safeCount, totalCount } = useProducts();
 
   const chartData = [
     { name: 'OK', count: safeCount, fill: 'var(--color-safe)' },
@@ -33,13 +37,48 @@ export default function ReportsPage() {
     </Card>
   );
 
+  const generateCSV = (data: Product[]) => {
+    const headers = ['Nome do Produto', 'Lote', 'Data de Validade', 'Status'];
+    const rows = data.map(product => [
+      `"${product.nome.replace(/"/g, '""')}"`, // Handle quotes in product name
+      product.lote,
+      formatDate(product.validade.toDate()),
+      getExpirationStatusText(getExpirationStatus(product.validade.toDate()))
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+    
+    return csvContent;
+  };
+
+  const handleDownload = () => {
+    const csvData = generateCSV(products);
+    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    const "relatorio_produtos.csv" = `relatorio_produtos_${new Date().toISOString().split('T')[0]}.csv`;
+    link.setAttribute('download', "relatorio_produtos.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="flex flex-col gap-8">
-      <header>
-        <h1 className="text-3xl font-bold font-headline tracking-tight">Relatórios do Inventário</h1>
-        <p className="text-muted-foreground">
-          Uma visão geral dos status de validade de seus produtos.
-        </p>
+      <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+            <h1 className="text-3xl font-bold font-headline tracking-tight">Relatórios do Inventário</h1>
+            <p className="text-muted-foreground">
+            Uma visão geral dos status de validade de seus produtos.
+            </p>
+        </div>
+        <Button onClick={handleDownload} disabled={loading || products.length === 0}>
+            <Download /> Baixar Relatório CSV
+        </Button>
       </header>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
