@@ -42,14 +42,14 @@ import Link from 'next/link';
 
 const statusStyles: Record<ExpirationStatus, {
   icon: React.ElementType,
-  badgeVariant: 'destructive' | 'warning' | 'default',
+  badgeVariant: 'destructive' | 'warning' | 'default' | 'orange',
   cardClass: string,
   text: string
 }> = {
   expired: {
     icon: XCircle,
-    badgeVariant: 'destructive',
-    cardClass: 'border-destructive/50 hover:border-destructive',
+    badgeVariant: 'orange',
+    cardClass: 'border-orange-500/50 hover:border-orange-500',
     text: 'Vencido'
   },
   expiringSoon: {

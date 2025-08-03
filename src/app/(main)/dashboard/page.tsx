@@ -68,7 +68,7 @@ export default function DashboardPage() {
             <TabsTrigger value="all">Todos ({statusCounts.all})</TabsTrigger>
             <TabsTrigger value="safe" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary-foreground">OK ({statusCounts.safe})</TabsTrigger>
             <TabsTrigger value="expiringSoon" className="data-[state=active]:bg-warning/20 data-[state=active]:text-warning-foreground">Próximo ({statusCounts.expiringSoon})</TabsTrigger>
-            <TabsTrigger value="expired" className="data-[state=active]:bg-destructive/20 data-[state=active]:text-destructive-foreground">Vencido ({statusCounts.expired})</TabsTrigger>
+            <TabsTrigger value="expired" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-500">Vencido ({statusCounts.expired})</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>

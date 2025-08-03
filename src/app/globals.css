@@ -30,6 +30,8 @@ h1, h2, h3, h4, h5, h6 {
     --destructive-foreground: 0 0% 100%;
     --warning: 45 93% 58%;
     --warning-foreground: 45 93% 10%;
+    --orange: 25 95% 53%;
+    --orange-foreground: 25 95% 10%;
     --border: 206 50% 85%;
     --input: 206 50% 85%;
     --ring: 206 79% 63%;
@@ -59,6 +61,8 @@ h1, h2, h3, h4, h5, h6 {
     --destructive-foreground: 0 0% 100%;
     --warning: 45 85% 55%;
     --warning-foreground: 45 85% 10%;
+    --orange: 25 95% 53%;
+    --orange-foreground: 25 95% 10%;
     --border: 210 20% 25%;
     --input: 210 20% 25%;
     --ring: 206 85% 70%;
