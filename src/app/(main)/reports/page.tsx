@@ -10,9 +10,28 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { formatDate, getExpirationStatus, getExpirationStatusText } from '@/lib/utils';
 import type { Product } from '@/lib/types';
+import type { ExpirationStatus } from '@/lib/utils';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+
+
+const STATUS_OPTIONS: { id: ExpirationStatus; label: string }[] = [
+    { id: 'safe', label: 'OK' },
+    { id: 'expiringSoon', label: 'Venc. 5 dias' },
+    { id: 'expiringIn2Days', label: 'Venc. até 2 dias' },
+    { id: 'expired', label: 'Vencido' },
+];
 
 export default function ReportsPage() {
   const { products, loading, expiredCount, expiringIn2DaysCount, expiringSoonCount, safeCount, totalCount } = useProducts();
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [selectedStatuses, setSelectedStatuses] = React.useState<Record<ExpirationStatus, boolean>>({
+    safe: true,
+    expiringSoon: true,
+    expiringIn2Days: true,
+    expired: true,
+  });
 
   const chartData = [
     { name: 'OK', count: safeCount, fill: 'var(--color-safe)' },
@@ -55,7 +74,18 @@ export default function ReportsPage() {
   };
 
   const handleDownload = () => {
-    const csvData = generateCSV(products);
+    const activeStatuses = Object.entries(selectedStatuses)
+        .filter(([, isSelected]) => isSelected)
+        .map(([status]) => status as ExpirationStatus);
+    
+    const filteredProducts = products.filter(p => activeStatuses.includes(getExpirationStatus(p.validade.toDate())));
+
+    if (filteredProducts.length === 0) {
+        alert("Nenhum produto encontrado para os filtros selecionados.");
+        return;
+    }
+
+    const csvData = generateCSV(filteredProducts);
     const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -65,7 +95,21 @@ export default function ReportsPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    setIsDialogOpen(false);
   };
+  
+  const handleSelectAll = (checked: boolean) => {
+    setSelectedStatuses({
+        safe: checked,
+        expiringSoon: checked,
+        expiringIn2Days: checked,
+        expired: checked,
+    });
+  };
+
+  const allSelected = Object.values(selectedStatuses).every(Boolean);
+  const isIndeterminate = !allSelected && Object.values(selectedStatuses).some(Boolean);
+
 
   return (
     <div className="flex flex-col gap-8">
@@ -76,9 +120,47 @@ export default function ReportsPage() {
             Uma visão geral dos status de validade de seus produtos.
             </p>
         </div>
-        <Button onClick={handleDownload} disabled={loading || products.length === 0}>
-            <Download /> Baixar Relatório CSV
-        </Button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+                 <Button disabled={loading || products.length === 0}>
+                    <Download /> Baixar Relatório CSV
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Personalizar Relatório</DialogTitle>
+                    <DialogDescription>
+                        Selecione os status dos produtos que você deseja incluir no seu relatório CSV.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col gap-4 py-4">
+                     <div className="flex items-center space-x-2">
+                        <Checkbox 
+                           id="select-all" 
+                           checked={allSelected}
+                           onCheckedChange={(checked) => handleSelectAll(Boolean(checked))}
+                           aria-label="Selecionar todos"
+                        />
+                        <Label htmlFor="select-all" className="font-bold">Selecionar Todos</Label>
+                    </div>
+                    <hr/>
+                    {STATUS_OPTIONS.map(option => (
+                        <div key={option.id} className="flex items-center space-x-2">
+                            <Checkbox 
+                               id={option.id} 
+                               checked={selectedStatuses[option.id]}
+                               onCheckedChange={(checked) => setSelectedStatuses(prev => ({...prev, [option.id]: Boolean(checked)}))}
+                            />
+                            <Label htmlFor={option.id}>{option.label}</Label>
+                        </div>
+                    ))}
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+                    <Button onClick={handleDownload}>Baixar CSV</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
       </header>
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
@@ -127,3 +209,4 @@ export default function ReportsPage() {
     </div>
   );
 }
+
