@@ -58,8 +58,9 @@ export async function addProductAction(productData: {
   
   try {
     await ensureProductNameExists(nome);
-    const [year, month, day] = validade.split('-').map(Number);
-    const validadeDate = new Date(Date.UTC(year, month - 1, day));
+    // Directly use the date string, which Firestore can interpret correctly
+    // when creating a timestamp, avoiding timezone issues.
+    const validadeDate = new Date(validade + 'T00:00:00');
     
     await adminDb.collection('produtos').add({
       nome,
@@ -106,8 +107,9 @@ export async function updateProductAction(productData: {
         
         const productRef = adminDb.collection('produtos').doc(id);
         
-        const [year, month, day] = validade.split('-').map(Number);
-        const validadeDate = new Date(Date.UTC(year, month - 1, day));
+        // Correctly handle date to avoid timezone-off-by-one errors.
+        // Appending T00:00:00 treats the date as local to that specific day.
+        const validadeDate = new Date(validade + 'T00:00:00');
         
         await productRef.update({
             nome,
