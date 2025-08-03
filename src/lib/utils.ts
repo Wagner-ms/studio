@@ -11,12 +11,13 @@ export type ExpirationStatus = 'expired' | 'expiringSoon' | 'safe';
 export function getExpirationStatus(expirationDate: Date | string): ExpirationStatus {
   const date = typeof expirationDate === 'string' ? parseISO(expirationDate) : expirationDate;
   const today = new Date();
+  today.setHours(0, 0, 0, 0); // Normalize today's date to the beginning of the day
   const daysUntilExpiration = differenceInDays(date, today);
 
-  if (daysUntilExpiration < 0) {
+  if (daysUntilExpiration <= 2) {
     return 'expired';
   }
-  if (daysUntilExpiration <= 3) {
+  if (daysUntilExpiration <= 5) {
     return 'expiringSoon';
   }
   return 'safe';
