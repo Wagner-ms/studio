@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { z } from 'zod';
@@ -58,8 +58,10 @@ async function getProductById(id: string): Promise<Product | null> {
 }
 
 
-export default function EditProductPage({ params }: { params: { id: string } }) {
+export default function EditProductPage() {
   const router = useRouter();
+  const params = useParams();
+  const productId = params.id as string;
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isPageLoading, setIsPageLoading] = React.useState(true);
   const [imagePreview, setImagePreview] = React.useState<string | null>(null);
@@ -80,12 +82,13 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   });
   
   React.useEffect(() => {
+    if (!productId) return;
     const fetchData = async () => {
         setIsPageLoading(true);
         try {
             const [names, product] = await Promise.all([
                 getProductNames(),
-                getProductById(params.id)
+                getProductById(productId)
             ]);
             
             setProductNames(names);
@@ -116,7 +119,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         }
     };
     fetchData();
-  }, [params.id]);
+  }, [productId]);
 
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -208,7 +211,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         }
         
         await updateProductAction({
-            id: params.id,
+            id: productId,
             nome: data.nome,
             lote: data.lote,
             validade: data.validade,
