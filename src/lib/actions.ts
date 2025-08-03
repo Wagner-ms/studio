@@ -58,8 +58,8 @@ export async function addProductAction(productData: {
   
   try {
     await ensureProductNameExists(nome);
-    // Directly use the date string, which Firestore can interpret correctly
-    // when creating a timestamp, avoiding timezone issues.
+    // Appending T00:00:00 ensures the date is treated as local time
+    // and avoids timezone-related shifts to the previous day.
     const validadeDate = new Date(validade + 'T00:00:00');
     
     await adminDb.collection('produtos').add({
@@ -107,8 +107,8 @@ export async function updateProductAction(productData: {
         
         const productRef = adminDb.collection('produtos').doc(id);
         
-        // Correctly handle date to avoid timezone-off-by-one errors.
-        // Appending T00:00:00 treats the date as local to that specific day.
+        // Appending T00:00:00 ensures the date is treated as local time
+        // and avoids timezone-related shifts to the previous day.
         const validadeDate = new Date(validade + 'T00:00:00');
         
         await productRef.update({
