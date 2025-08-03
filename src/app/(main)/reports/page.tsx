@@ -86,7 +86,7 @@ export default function ReportsPage() {
     }
 
     const csvData = generateCSV(filteredProducts);
-    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['\uFEFF' + csvData], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
@@ -108,7 +108,6 @@ export default function ReportsPage() {
   };
 
   const allSelected = Object.values(selectedStatuses).every(Boolean);
-  const isIndeterminate = !allSelected && Object.values(selectedStatuses).some(Boolean);
 
 
   return (
@@ -123,7 +122,7 @@ export default function ReportsPage() {
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
                  <Button disabled={loading || products.length === 0}>
-                    <Download /> Baixar Relatório CSV
+                    <Download className="mr-2 h-4 w-4"/> Baixar Relatório CSV
                 </Button>
             </DialogTrigger>
             <DialogContent>
@@ -209,4 +208,3 @@ export default function ReportsPage() {
     </div>
   );
 }
-
