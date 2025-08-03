@@ -10,7 +10,7 @@ export default function MainLayout({
   return (
     <SidebarProvider>
       <MainNav />
-      <main className="flex-1 p-4 sm:p-6 bg-muted/40">
+      <main className="flex-1 bg-muted/40 p-4 sm:p-6">
         {children}
       </main>
     </SidebarProvider>
