@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn, formatDate, getExpirationStatus } from '@/lib/utils';
-import { AlertTriangle, CheckCircle2, Eye, FileQuestion, Loader2, Tag, Trash2, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Eye, FileQuestion, Loader2, Pencil, Tag, Trash2, XCircle } from 'lucide-react';
 import type { ExpirationStatus } from '@/lib/utils';
 import {
   AlertDialog,
@@ -38,6 +38,7 @@ import {
 import { deleteProductAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import * as React from 'react';
+import Link from 'next/link';
 
 const statusStyles: Record<ExpirationStatus, {
   icon: React.ElementType,
@@ -139,6 +140,13 @@ export function ProductCard({ product }: { product: Product }) {
             </div>
           </DialogContent>
         </Dialog>
+        
+        <Button variant="outline" size="icon" asChild>
+          <Link href={`/edit/${product.id}`}>
+            <Pencil />
+            <span className="sr-only">Editar Produto</span>
+          </Link>
+        </Button>
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
@@ -188,6 +196,7 @@ export function ProductCardSkeleton() {
       </CardContent>
       <CardFooter className="flex justify-between gap-2">
         <Skeleton className="h-10 flex-1" />
+        <Skeleton className="h-10 w-10" />
         <Skeleton className="h-10 w-10" />
       </CardFooter>
     </Card>

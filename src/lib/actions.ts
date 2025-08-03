@@ -16,6 +16,11 @@ const ProductSchema = z.object({
   fotoEtiquetaUrl: z.string().url().optional().or(z.literal('')),
 });
 
+const UpdateProductSchema = ProductSchema.extend({
+  id: z.string().min(1, { message: 'Product ID is required' }),
+});
+
+
 async function ensureProductNameExists(productName: string) {
     if (!adminDb) throw new Error("Firebase Admin not initialized");
     const trimmedName = productName.trim();
@@ -74,6 +79,55 @@ export async function addProductAction(productData: {
   revalidatePath('/notifications');
   revalidatePath('/reports');
 }
+
+export async function updateProductAction(productData: {
+    id: string;
+    nome: string;
+    lote: string;
+    validade: string;
+    fotoEtiquetaUrl: string;
+}) {
+    if (!adminDb) {
+        throw new Error("Falha na conexão com o servidor. Verifique as credenciais do Firebase Admin.");
+    }
+    
+    const validatedFields = UpdateProductSchema.safeParse(productData);
+
+    if (!validatedFields.success) {
+        const validationErrors = validatedFields.error.flatten().fieldErrors;
+        const firstError = Object.values(validationErrors)[0]?.[0] || 'Erro de validação desconhecido.';
+        throw new Error(firstError);
+    }
+    
+    const { id, nome, lote, validade, fotoEtiquetaUrl } = validatedFields.data;
+    
+    try {
+        await ensureProductNameExists(nome);
+        
+        const productRef = adminDb.collection('produtos').doc(id);
+        
+        const [year, month, day] = validade.split('-').map(Number);
+        const validadeDate = new Date(Date.UTC(year, month - 1, day));
+        
+        await productRef.update({
+            nome,
+            lote,
+            validade: Timestamp.fromDate(validadeDate),
+            fotoEtiqueta: fotoEtiquetaUrl,
+        });
+
+    } catch (error) {
+        console.error('Erro ao atualizar produto:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro desconhecido.';
+        throw new Error(errorMessage);
+    }
+
+    revalidatePath('/dashboard');
+    revalidatePath('/notifications');
+    revalidatePath('/reports');
+    revalidatePath(`/edit/${id}`);
+}
+
 
 export async function deleteProductAction(productId: string) {
   if (!adminDb) {
