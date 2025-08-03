@@ -96,7 +96,7 @@ export function MainNav() {
   }
 
   return (
-    <Sidebar className="hidden sm:flex sm:flex-col">
+    <Sidebar className="hidden border-r sm:flex sm:flex-col">
        <NavContent />
     </Sidebar>
   );
