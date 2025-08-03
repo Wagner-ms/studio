@@ -116,7 +116,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         }
     };
     fetchData();
-  }, [params.id, form]);
+  }, [params.id]);
 
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
