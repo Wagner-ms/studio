@@ -60,8 +60,8 @@ export default function ReportsPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    const "relatorio_produtos.csv" = `relatorio_produtos_${new Date().toISOString().split('T')[0]}.csv`;
-    link.setAttribute('download', "relatorio_produtos.csv");
+    const fileName = `relatorio_produtos_${new Date().toISOString().split('T')[0]}.csv`;
+    link.setAttribute('download', fileName);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
