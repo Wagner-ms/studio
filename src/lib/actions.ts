@@ -59,7 +59,7 @@ export async function addProductAction(productData: {
   try {
     await ensureProductNameExists(nome);
     
-    // Create a UTC date to avoid timezone issues.
+    // Create a UTC date explicitly to avoid timezone issues.
     const [year, month, day] = validade.split('-').map(Number);
     const validadeDate = new Date(Date.UTC(year, month - 1, day));
     
@@ -108,7 +108,7 @@ export async function updateProductAction(productData: {
         
         const productRef = adminDb.collection('produtos').doc(id);
         
-        // Create a UTC date to avoid timezone issues.
+        // Create a UTC date explicitly to avoid timezone issues.
         const [year, month, day] = validade.split('-').map(Number);
         const validadeDate = new Date(Date.UTC(year, month - 1, day));
         
