@@ -58,9 +58,10 @@ export async function addProductAction(productData: {
   
   try {
     await ensureProductNameExists(nome);
-    // Appending T00:00:00 ensures the date is treated as local time
-    // and avoids timezone-related shifts to the previous day.
-    const validadeDate = new Date(validade + 'T00:00:00');
+    
+    // Create a UTC date to avoid timezone issues.
+    const [year, month, day] = validade.split('-').map(Number);
+    const validadeDate = new Date(Date.UTC(year, month - 1, day));
     
     await adminDb.collection('produtos').add({
       nome,
@@ -107,9 +108,9 @@ export async function updateProductAction(productData: {
         
         const productRef = adminDb.collection('produtos').doc(id);
         
-        // Appending T00:00:00 ensures the date is treated as local time
-        // and avoids timezone-related shifts to the previous day.
-        const validadeDate = new Date(validade + 'T00:00:00');
+        // Create a UTC date to avoid timezone issues.
+        const [year, month, day] = validade.split('-').map(Number);
+        const validadeDate = new Date(Date.UTC(year, month - 1, day));
         
         await productRef.update({
             nome,
