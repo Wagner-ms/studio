@@ -48,9 +48,15 @@ const statusStyles: Record<ExpirationStatus, {
 }> = {
   expired: {
     icon: XCircle,
-    badgeVariant: 'orange',
-    cardClass: 'border-orange-500/50 hover:border-orange-500',
+    badgeVariant: 'destructive',
+    cardClass: 'border-destructive/50 hover:border-destructive',
     text: 'Vencido'
+  },
+  expiringIn2Days: {
+      icon: AlertTriangle,
+      badgeVariant: 'orange',
+      cardClass: 'border-orange-500/50 hover:border-orange-500',
+      text: 'Vence em 2 dias'
   },
   expiringSoon: {
     icon: AlertTriangle,

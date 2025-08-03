@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { collection, onSnapshot, query, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Product } from '@/lib/types';
@@ -39,14 +39,29 @@ export function useProducts() {
     return () => unsubscribe();
   }, []);
 
-  const getProductCountByStatus = (status: ExpirationStatus) => {
-    return products.filter(p => getExpirationStatus(p.validade.toDate()) === status).length;
-  }
-  
-  const expiredCount = getProductCountByStatus('expired');
-  const expiringSoonCount = getProductCountByStatus('expiringSoon');
-  const safeCount = getProductCountByStatus('safe');
-  const totalCount = products.length;
+  const counts = useMemo(() => {
+    const statusCounts = {
+      expired: 0,
+      expiringIn2Days: 0,
+      expiringSoon: 0,
+      safe: 0,
+    };
 
-  return { products, loading, error, expiredCount, expiringSoonCount, safeCount, totalCount };
+    products.forEach(p => {
+      const status = getExpirationStatus(p.validade.toDate());
+      if (status in statusCounts) {
+        statusCounts[status]++;
+      }
+    });
+
+    return {
+      expiredCount: statusCounts.expired,
+      expiringIn2DaysCount: statusCounts.expiringIn2Days,
+      expiringSoonCount: statusCounts.expiringSoon,
+      safeCount: statusCounts.safe,
+      totalCount: products.length,
+    };
+  }, [products]);
+
+  return { products, loading, error, ...counts };
 }

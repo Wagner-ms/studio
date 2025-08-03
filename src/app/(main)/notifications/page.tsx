@@ -12,7 +12,7 @@ export default function NotificationsPage() {
 
   const actionableProducts = products.filter(p => {
     const status = getExpirationStatus(p.validade.toDate());
-    return status === 'expired' || status === 'expiringSoon';
+    return status === 'expired' || status === 'expiringIn2Days' || status === 'expiringSoon';
   });
 
   return (

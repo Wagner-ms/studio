@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export type ExpirationStatus = 'expired' | 'expiringSoon' | 'safe';
+export type ExpirationStatus = 'expired' | 'expiringIn2Days' | 'expiringSoon' | 'safe';
 
 export function getExpirationStatus(expirationDate: Date | string): ExpirationStatus {
   const date = typeof expirationDate === 'string' ? parseISO(expirationDate) : expirationDate;
@@ -14,8 +14,11 @@ export function getExpirationStatus(expirationDate: Date | string): ExpirationSt
   today.setHours(0, 0, 0, 0); // Normalize today's date to the beginning of the day
   const daysUntilExpiration = differenceInDays(date, today);
 
-  if (daysUntilExpiration <= 2) {
+  if (daysUntilExpiration < 0) {
     return 'expired';
+  }
+  if (daysUntilExpiration <= 2) {
+    return 'expiringIn2Days';
   }
   if (daysUntilExpiration <= 5) {
     return 'expiringSoon';

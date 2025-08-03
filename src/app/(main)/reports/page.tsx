@@ -8,12 +8,13 @@ import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recha
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ReportsPage() {
-  const { loading, expiredCount, expiringSoonCount, safeCount, totalCount } = useProducts();
+  const { loading, expiredCount, expiringIn2DaysCount, expiringSoonCount, safeCount, totalCount } = useProducts();
 
   const chartData = [
     { name: 'OK', count: safeCount, fill: 'var(--color-safe)' },
-    { name: 'Venc. Próximo', count: expiringSoonCount, fill: 'var(--color-warning)' },
-    { name: 'Vencido', count: expiredCount, fill: 'var(--color-expired)' },
+    { name: 'Venc. 5 dias', count: expiringSoonCount, fill: 'var(--color-warning)' },
+    { name: 'Venc. 2 dias', count: expiringIn2DaysCount, fill: 'var(--color-orange)' },
+    { name: 'Vencido', count: expiredCount, fill: 'var(--color-destructive)' },
   ];
   
   const StatCard = ({ title, value, icon: Icon, colorClass, isLoading }: { title: string, value: number, icon: React.ElementType, colorClass: string, isLoading: boolean }) => (
@@ -41,10 +42,11 @@ export default function ReportsPage() {
         </p>
       </header>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <StatCard title="Total de Produtos" value={totalCount} icon={Package} colorClass="" isLoading={loading} />
-        <StatCard title="OK" value={safeCount} icon={CheckCircle2} colorClass="text-green-500" isLoading={loading} />
-        <StatCard title="Vencimento Próximo" value={expiringSoonCount} icon={AlertTriangle} colorClass="text-yellow-500" isLoading={loading} />
+        <StatCard title="OK" value={safeCount} icon={CheckCircle2} colorClass="text-primary" isLoading={loading} />
+        <StatCard title="Venc. 5 dias" value={expiringSoonCount} icon={AlertTriangle} colorClass="text-yellow-500" isLoading={loading} />
+        <StatCard title="Venc. 2 dias" value={expiringIn2DaysCount} icon={AlertTriangle} colorClass="text-orange-500" isLoading={loading} />
         <StatCard title="Vencidos" value={expiredCount} icon={XCircle} colorClass="text-red-500" isLoading={loading} />
       </div>
 
@@ -61,7 +63,8 @@ export default function ReportsPage() {
             <div className="w-full h-[300px]" style={{
               '--color-safe': 'hsl(var(--primary))',
               '--color-warning': 'hsl(var(--warning))',
-              '--color-expired': 'hsl(var(--destructive))',
+              '--color-orange': 'hsl(var(--orange))',
+              '--color-destructive': 'hsl(var(--destructive))',
             } as React.CSSProperties}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
