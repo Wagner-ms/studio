@@ -8,6 +8,7 @@ export interface Product {
   fotoEtiqueta: string;
   criadoEm: Timestamp;
   alertado: boolean;
+  categoria?: string;
 }
 
 export interface ProductName {

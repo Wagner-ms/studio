@@ -26,6 +26,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const FormSchema = z.object({
   nome: z.string().min(1, 'O nome do produto é obrigatório'),
@@ -34,9 +35,12 @@ const FormSchema = z.object({
     message: 'Data inválida. Use o formato AAAA-MM-DD.',
   }),
   fotoEtiquetaFile: z.instanceof(File).optional(),
+  categoria: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof FormSchema>;
+
+const productCategories = ['Cam.Bebidas', 'cam.laticinios', 'cam.congelados', 'cam.sorvete'];
 
 async function getProductNames(): Promise<ProductName[]> {
     const productNamesRef = collection(db, 'nomesDeProdutos');
@@ -63,6 +67,7 @@ export default function AddProductPage() {
       nome: '',
       lote: '',
       validade: '',
+      categoria: '',
     },
   });
 
@@ -112,6 +117,9 @@ export default function AddProductPage() {
           }
           if (result.lotNumber) {
             form.setValue('lote', result.lotNumber.trim(), { shouldValidate: true });
+          }
+          if (result.category && productCategories.includes(result.category)) {
+            form.setValue('categoria', result.category, { shouldValidate: true });
           }
 
           if (result.expirationDate) {
@@ -164,6 +172,7 @@ export default function AddProductPage() {
           lote: data.lote,
           validade: data.validade,
           fotoEtiquetaUrl: fotoEtiquetaUrl,
+          categoria: data.categoria,
         };
         
         await addProductAction(productData);
@@ -323,6 +332,20 @@ export default function AddProductPage() {
                 </PopoverContent>
               </Popover>
               {form.formState.errors.nome && <p className="text-sm font-medium text-destructive">{form.formState.errors.nome.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="categoria">Categoria</Label>
+                <Select onValueChange={(value) => form.setValue('categoria', value)} defaultValue={form.getValues('categoria')} disabled={isSubmitting}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {productCategories.map(category => (
+                            <SelectItem key={category} value={category}>{category}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
 
             <div className="space-y-2">

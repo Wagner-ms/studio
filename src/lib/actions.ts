@@ -14,6 +14,7 @@ const ProductSchema = z.object({
     message: 'A data de validade deve estar no formato AAAA-MM-DD.',
   }),
   fotoEtiquetaUrl: z.string().url().optional().or(z.literal('')),
+  categoria: z.string().optional(),
 });
 
 const UpdateProductSchema = ProductSchema.extend({
@@ -41,6 +42,7 @@ export async function addProductAction(productData: {
   lote: string;
   validade: string;
   fotoEtiquetaUrl: string;
+  categoria?: string;
 }) {
   if (!adminDb) {
     throw new Error("Falha na conexão com o servidor. Verifique as credenciais do Firebase Admin.");
@@ -54,7 +56,7 @@ export async function addProductAction(productData: {
      throw new Error(firstError);
   }
   
-  const { nome, lote, validade, fotoEtiquetaUrl } = validatedFields.data;
+  const { nome, lote, validade, fotoEtiquetaUrl, categoria } = validatedFields.data;
   
   try {
     await ensureProductNameExists(nome);
@@ -70,6 +72,7 @@ export async function addProductAction(productData: {
       fotoEtiqueta: fotoEtiquetaUrl,
       criadoEm: Timestamp.now(),
       alertado: false,
+      categoria,
     });
   } catch (error) {
     console.error('Erro ao adicionar produto:', error);
@@ -88,6 +91,7 @@ export async function updateProductAction(productData: {
     lote: string;
     validade: string;
     fotoEtiquetaUrl: string;
+    categoria?: string;
 }) {
     if (!adminDb) {
         throw new Error("Falha na conexão com o servidor. Verifique as credenciais do Firebase Admin.");
@@ -101,7 +105,7 @@ export async function updateProductAction(productData: {
         throw new Error(firstError);
     }
     
-    const { id, nome, lote, validade, fotoEtiquetaUrl } = validatedFields.data;
+    const { id, nome, lote, validade, fotoEtiquetaUrl, categoria } = validatedFields.data;
     
     try {
         await ensureProductNameExists(nome);
@@ -117,6 +121,7 @@ export async function updateProductAction(productData: {
             lote,
             validade: Timestamp.fromDate(validadeDate),
             fotoEtiqueta: fotoEtiquetaUrl,
+            categoria,
         });
 
     } catch (error) {

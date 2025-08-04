@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const FormSchema = z.object({
   nome: z.string().min(1, 'O nome do produto é obrigatório'),
@@ -35,9 +36,12 @@ const FormSchema = z.object({
   }),
   fotoEtiquetaFile: z.instanceof(File).optional(),
   fotoEtiquetaUrl: z.string().url().optional().or(z.literal('')),
+  categoria: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof FormSchema>;
+
+const productCategories = ['Cam.Bebidas', 'cam.laticinios', 'cam.congelados', 'cam.sorvete'];
 
 async function getProductNames(): Promise<ProductName[]> {
     const productNamesRef = collection(db, 'nomesDeProdutos');
@@ -78,6 +82,7 @@ export default function EditProductPage() {
       lote: '',
       validade: '',
       fotoEtiquetaUrl: '',
+      categoria: '',
     },
   });
   
@@ -99,6 +104,7 @@ export default function EditProductPage() {
                     lote: product.lote,
                     validade: format(product.validade.toDate(), 'yyyy-MM-dd'),
                     fotoEtiquetaUrl: product.fotoEtiqueta || '',
+                    categoria: product.categoria || '',
                 });
                 setInputValue(product.nome);
                 if(product.fotoEtiqueta){
@@ -119,7 +125,7 @@ export default function EditProductPage() {
         }
     };
     fetchData();
-  }, [productId]);
+  }, [productId, form]);
 
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -127,7 +133,7 @@ export default function EditProductPage() {
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      form.setValue('fotoEtiquetaFile', file);
+      form.setValue('fotoEtiquetaFile', file, { shouldDirty: true });
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -158,19 +164,22 @@ export default function EditProductPage() {
           
           if (result.productName) {
             const trimmedName = result.productName.trim();
-            form.setValue('nome', trimmedName, { shouldValidate: true });
+            form.setValue('nome', trimmedName, { shouldValidate: true, shouldDirty: true });
             setInputValue(trimmedName);
           }
           if (result.lotNumber) {
-            form.setValue('lote', result.lotNumber.trim(), { shouldValidate: true });
+            form.setValue('lote', result.lotNumber.trim(), { shouldValidate: true, shouldDirty: true });
+          }
+          if (result.category && productCategories.includes(result.category)) {
+            form.setValue('categoria', result.category, { shouldValidate: true, shouldDirty: true });
           }
 
           if (result.expirationDate) {
             const parsedDate = parseISO(result.expirationDate);
             if (isValid(parsedDate)) {
-               form.setValue('validade', result.expirationDate, { shouldValidate: true });
+               form.setValue('validade', result.expirationDate, { shouldValidate: true, shouldDirty: true });
             } else {
-              form.setValue('validade', '', { shouldValidate: true });
+              form.setValue('validade', '', { shouldValidate: true, shouldDirty: true });
                toast({
                   variant: 'destructive',
                   title: 'Data de Validade Inválida',
@@ -216,6 +225,7 @@ export default function EditProductPage() {
             lote: data.lote,
             validade: data.validade,
             fotoEtiquetaUrl,
+            categoria: data.categoria,
         });
 
         toast({
@@ -246,13 +256,13 @@ export default function EditProductPage() {
 
   if (isPageLoading) {
       return (
-         <div className="max-w-2xl mx-auto">
+         <div className="max-w-2xl mx-auto p-4 sm:p-6">
             <Card>
                 <CardHeader>
                     <Skeleton className="h-8 w-3/4" />
                     <Skeleton className="h-4 w-1/2" />
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-6 pt-6">
                     <div className="space-y-2">
                         <Skeleton className="h-4 w-1/4" />
                         <Skeleton className="w-full aspect-video rounded-lg" />
@@ -270,6 +280,10 @@ export default function EditProductPage() {
                         <Skeleton className="h-4 w-1/4" />
                         <Skeleton className="h-10 w-full" />
                     </div>
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-1/4" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
                      <Skeleton className="h-10 w-full" />
                 </CardContent>
             </Card>
@@ -278,7 +292,7 @@ export default function EditProductPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto p-4 sm:p-6">
       <Card>
         <CardHeader>
           <CardTitle className="font-headline text-2xl">Editar Produto</CardTitle>
@@ -329,7 +343,7 @@ export default function EditProductPage() {
               variant="outline"
               className="w-full"
               onClick={handleOcr}
-              disabled={!imagePreview || isOcrLoading || isSubmitting || !form.formState.dirtyFields.fotoEtiquetaFile}
+              disabled={isOcrLoading || isSubmitting || !form.formState.dirtyFields.fotoEtiquetaFile}
             >
               {isOcrLoading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -359,7 +373,10 @@ export default function EditProductPage() {
                     <CommandInput 
                       placeholder="Busque ou crie um novo produto..."
                       value={inputValue}
-                      onValueChange={setInputValue}
+                      onValueChange={(value) => {
+                          setInputValue(value);
+                          form.setValue('nome', value, { shouldDirty: true });
+                      }}
                      />
                     <CommandList>
                       <CommandEmpty>
@@ -372,7 +389,7 @@ export default function EditProductPage() {
                             value={p.nome}
                             onSelect={(currentValue) => {
                               const finalValue = productNames.find(p => p.nome.toLowerCase() === currentValue)?.nome || currentValue;
-                              form.setValue("nome", finalValue, { shouldValidate: true });
+                              form.setValue("nome", finalValue, { shouldValidate: true, shouldDirty: true });
                               setInputValue(finalValue);
                               setComboboxOpen(false);
                             }}
@@ -391,7 +408,7 @@ export default function EditProductPage() {
                               value={inputValue}
                               onSelect={(currentValue) => {
                                  const finalValue = currentValue.trim();
-                                 form.setValue("nome", finalValue, { shouldValidate: true });
+                                 form.setValue("nome", finalValue, { shouldValidate: true, shouldDirty: true });
                                  setInputValue(finalValue);
                                  setComboboxOpen(false);
                               }}
@@ -406,6 +423,20 @@ export default function EditProductPage() {
                 </PopoverContent>
               </Popover>
               {form.formState.errors.nome && <p className="text-sm font-medium text-destructive">{form.formState.errors.nome.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="categoria">Categoria</Label>
+                <Select onValueChange={(value) => form.setValue('categoria', value, { shouldDirty: true })} value={form.watch('categoria')} disabled={isSubmitting}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {productCategories.map(category => (
+                            <SelectItem key={category} value={category}>{category}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
 
             <div className="space-y-2">

@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn, formatDate, getExpirationStatus } from '@/lib/utils';
-import { AlertTriangle, CheckCircle2, Eye, FileQuestion, Loader2, Pencil, Tag, Trash2, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Eye, FileQuestion, Folder, Loader2, Pencil, Tag, Trash2, XCircle } from 'lucide-react';
 import type { ExpirationStatus } from '@/lib/utils';
 import {
   AlertDialog,
@@ -101,14 +101,21 @@ export function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <Card className={cn('transition-all', cardClass)}>
+    <Card className={cn('transition-all flex flex-col', cardClass)}>
       <CardHeader>
         <CardTitle className="font-headline line-clamp-2">{product.nome}</CardTitle>
-        <CardDescription className="flex items-center gap-2 pt-1">
-          <Tag className="w-4 h-4" /> Lote: {product.lote}
+        <CardDescription className="flex flex-col gap-2 pt-1">
+          <span className="flex items-center gap-2">
+            <Tag className="w-4 h-4" /> Lote: {product.lote}
+          </span>
+          {product.categoria && (
+             <span className="flex items-center gap-2">
+                <Folder className="w-4 h-4" /> Categoria: {product.categoria}
+             </span>
+          )}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col gap-2">
+      <CardContent className="flex flex-col gap-2 flex-grow">
         <Badge variant={badgeVariant} className="w-fit">
           <Icon className="mr-2 h-4 w-4" />
           {text}
@@ -195,6 +202,7 @@ export function ProductCardSkeleton() {
       <CardHeader>
         <Skeleton className="h-6 w-3/4" />
         <Skeleton className="h-4 w-1/2 mt-2" />
+        <Skeleton className="h-4 w-1/3 mt-1" />
       </CardHeader>
       <CardContent>
         <Skeleton className="h-6 w-1/4" />
