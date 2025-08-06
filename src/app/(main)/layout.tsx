@@ -1,13 +1,26 @@
+// src/app/(main)/layout.tsx
 
 import { MainNav } from "@/components/main-nav";
 import { Sidebar } from "@/components/ui/sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import * as React from 'react';
 import Link from "next/link";
-import { BarChart3, Bell, LayoutDashboard, PlusCircle } from "lucide-react";
+import { BarChart3, Bell, LayoutDashboard, LogOut, PlusCircle } from "lucide-react";
 import { ValicareLogo } from "@/components/icons";
 import { SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { logoutAction } from "@/lib/auth.actions";
+
+function LogoutForm() {
+    return (
+        <form action={logoutAction}>
+            <SidebarMenuButton type="submit" className="w-full justify-start">
+                <LogOut />
+                <span>Sair</span>
+            </SidebarMenuButton>
+        </form>
+    );
+}
 
 function SidebarNavigation() {
     const menuItems = [
@@ -39,12 +52,13 @@ function SidebarNavigation() {
                 </SidebarMenu>
             </SidebarContent>
             <SidebarFooter>
-                <Button asChild className="w-full">
+                 <Button asChild className="w-full">
                     <Link href="/add">
                         <PlusCircle />
                         <span>Adicionar Produto</span>
                     </Link>
                 </Button>
+                <LogoutForm />
             </SidebarFooter>
         </Sidebar>
     );
