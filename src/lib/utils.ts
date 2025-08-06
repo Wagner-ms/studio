@@ -25,7 +25,7 @@ export function getExpirationStatus(expirationDate: Date | string): ExpirationSt
   return 'safe';
 }
 
-export function formatDate(date: Date | string) {
+export function formatDate(date: Date | string): string {
   const dateObj = typeof date === 'string' ? parseISO(date) : date;
   // Use startOfDay to handle timezone correctly from Firestore Timestamps
   return format(startOfDay(dateObj), 'dd/MM/yyyy');
