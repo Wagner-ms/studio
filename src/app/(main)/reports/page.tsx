@@ -14,6 +14,7 @@ import type { ExpirationStatus } from '@/lib/utils';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 const STATUS_OPTIONS: { id: ExpirationStatus; label: string }[] = [
@@ -22,6 +23,8 @@ const STATUS_OPTIONS: { id: ExpirationStatus; label: string }[] = [
     { id: 'expiringIn2Days', label: 'Venc. até 2 dias' },
     { id: 'expired', label: 'Vencido' },
 ];
+const productCategories = ['Cam.Bebidas', 'cam.laticinios', 'cam.congelados', 'cam.sorvete', 'Cam.Fiambra'];
+
 
 export default function ReportsPage() {
   const { products, loading, expiredCount, expiringIn2DaysCount, expiringSoonCount, safeCount, totalCount } = useProducts();
@@ -32,6 +35,7 @@ export default function ReportsPage() {
     expiringIn2Days: true,
     expired: true,
   });
+  const [selectedCategory, setSelectedCategory] = React.useState('all');
 
   const chartData = [
     { name: 'OK', count: safeCount, fill: 'var(--color-safe)' },
@@ -57,12 +61,13 @@ export default function ReportsPage() {
   );
 
   const generateCSV = (data: Product[]) => {
-    const headers = ['Nome do Produto', 'Lote', 'Data de Validade', 'Status'];
+    const headers = ['Nome do Produto', 'Lote', 'Data de Validade', 'Status', 'Categoria'];
     const rows = data.map(product => [
       `"${product.nome.replace(/"/g, '""')}"`, // Handle quotes in product name
       product.lote,
       formatDate(product.validade.toDate()),
-      getExpirationStatusText(getExpirationStatus(product.validade.toDate()))
+      getExpirationStatusText(getExpirationStatus(product.validade.toDate())),
+      product.categoria || ''
     ]);
 
     const csvContent = [
@@ -78,7 +83,9 @@ export default function ReportsPage() {
         .filter(([, isSelected]) => isSelected)
         .map(([status]) => status as ExpirationStatus);
     
-    const filteredProducts = products.filter(p => activeStatuses.includes(getExpirationStatus(p.validade.toDate())));
+    const filteredProducts = products
+      .filter(p => activeStatuses.includes(getExpirationStatus(p.validade.toDate())))
+      .filter(p => selectedCategory === 'all' || p.categoria === selectedCategory);
 
     if (filteredProducts.length === 0) {
         alert("Nenhum produto encontrado para os filtros selecionados.");
@@ -129,30 +136,50 @@ export default function ReportsPage() {
                 <DialogHeader>
                     <DialogTitle>Personalizar Relatório</DialogTitle>
                     <DialogDescription>
-                        Selecione os status dos produtos que você deseja incluir no seu relatório CSV.
+                        Selecione os filtros para os produtos que você deseja incluir no seu relatório CSV.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="flex flex-col gap-4 py-4">
-                     <div className="flex items-center space-x-2">
-                        <Checkbox 
-                           id="select-all" 
-                           checked={allSelected}
-                           onCheckedChange={(checked) => handleSelectAll(Boolean(checked))}
-                           aria-label="Selecionar todos"
-                        />
-                        <Label htmlFor="select-all" className="font-bold">Selecionar Todos</Label>
+                <div className="grid gap-6 py-4">
+                    <div>
+                        <Label className='text-base font-semibold'>Filtrar por Categoria</Label>
+                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                            <SelectTrigger className="mt-2">
+                                <SelectValue placeholder="Selecione uma categoria" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todas as Categorias</SelectItem>
+                                {productCategories.map(category => (
+                                    <SelectItem key={category} value={category}>{category}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
-                    <hr/>
-                    {STATUS_OPTIONS.map(option => (
-                        <div key={option.id} className="flex items-center space-x-2">
+
+                    <div>
+                        <Label className='text-base font-semibold'>Filtrar por Status</Label>
+                        <div className="flex items-center space-x-2 mt-4">
                             <Checkbox 
-                               id={option.id} 
-                               checked={selectedStatuses[option.id]}
-                               onCheckedChange={(checked) => setSelectedStatuses(prev => ({...prev, [option.id]: Boolean(checked)}))}
+                               id="select-all" 
+                               checked={allSelected}
+                               onCheckedChange={(checked) => handleSelectAll(Boolean(checked))}
+                               aria-label="Selecionar todos"
                             />
-                            <Label htmlFor={option.id}>{option.label}</Label>
+                            <Label htmlFor="select-all" className="font-bold">Selecionar Todos</Label>
                         </div>
-                    ))}
+                        <hr className='my-2'/>
+                        <div className='grid grid-cols-2 gap-2'>
+                        {STATUS_OPTIONS.map(option => (
+                            <div key={option.id} className="flex items-center space-x-2">
+                                <Checkbox 
+                                   id={option.id} 
+                                   checked={selectedStatuses[option.id]}
+                                   onCheckedChange={(checked) => setSelectedStatuses(prev => ({...prev, [option.id]: Boolean(checked)}))}
+                                />
+                                <Label htmlFor={option.id}>{option.label}</Label>
+                            </div>
+                        ))}
+                        </div>
+                    </div>
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
