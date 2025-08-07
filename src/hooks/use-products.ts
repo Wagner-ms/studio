@@ -40,9 +40,10 @@ export function useProducts() {
     return () => unsubscribe();
   }, []);
 
-  const { expiredCount, expiringIn2DaysCount, expiringSoonCount, safeCount, totalCount } = useMemo(() => {
+  const { expiredCount, expiringIn3DaysCount, expiringIn7DaysCount, expiringSoonCount, safeCount, totalCount } = useMemo(() => {
     let expired = 0;
-    let expiringIn2Days = 0;
+    let expiringIn3Days = 0;
+    let expiringIn7Days = 0;
     let expiringSoon = 0;
     let safe = 0;
 
@@ -52,8 +53,11 @@ export function useProducts() {
         case 'expired':
           expired++;
           break;
-        case 'expiringIn2Days':
-          expiringIn2Days++;
+        case 'expiringIn3Days':
+          expiringIn3Days++;
+          break;
+        case 'expiringIn7Days':
+          expiringIn7Days++;
           break;
         case 'expiringSoon':
           expiringSoon++;
@@ -66,12 +70,13 @@ export function useProducts() {
 
     return {
       expiredCount: expired,
-      expiringIn2DaysCount: expiringIn2Days,
+      expiringIn3DaysCount: expiringIn3Days,
+      expiringIn7DaysCount: expiringIn7Days,
       expiringSoonCount: expiringSoon,
       safeCount: safe,
       totalCount: products.length
     };
   }, [products]);
 
-  return { products, loading, error, expiredCount, expiringIn2DaysCount, expiringSoonCount, safeCount, totalCount };
+  return { products, loading, error, expiredCount, expiringIn3DaysCount, expiringIn7DaysCount, expiringSoonCount, safeCount, totalCount };
 }

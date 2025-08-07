@@ -42,27 +42,33 @@ import Link from 'next/link';
 
 const statusStyles: Record<ExpirationStatus, {
   icon: React.ElementType,
-  badgeVariant: 'destructive' | 'warning' | 'default' | 'orange',
+  badgeVariant: 'destructive' | 'warning' | 'default' | 'orange' | 'black',
   cardClass: string,
   text: string
 }> = {
   expired: {
     icon: XCircle,
-    badgeVariant: 'destructive',
-    cardClass: 'border-destructive/50 hover:border-destructive',
+    badgeVariant: 'black',
+    cardClass: 'border-black/50 hover:border-black dark:border-white/50 dark:hover:border-white',
     text: 'Vencido'
   },
-  expiringIn2Days: {
+  expiringIn3Days: {
+      icon: AlertTriangle,
+      badgeVariant: 'destructive',
+      cardClass: 'border-destructive/50 hover:border-destructive',
+      text: 'Vence em até 3 dias'
+  },
+  expiringIn7Days: {
       icon: AlertTriangle,
       badgeVariant: 'orange',
       cardClass: 'border-orange-500/50 hover:border-orange-500',
-      text: 'Vence em até 2 dias'
+      text: 'Vence em até 7 dias'
   },
   expiringSoon: {
     icon: AlertTriangle,
     badgeVariant: 'warning',
     cardClass: 'border-warning/50 hover:border-warning',
-    text: 'Venc. Próximo'
+    text: 'Vence em até 15 dias'
   },
   safe: {
     icon: CheckCircle2,

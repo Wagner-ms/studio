@@ -16,7 +16,7 @@ import type { Product } from '@/lib/types';
 
 
 export default function DashboardPage() {
-  const { products, loading, safeCount, expiringSoonCount, expiringIn2DaysCount, expiredCount } = useProducts();
+  const { products, loading, safeCount, expiringSoonCount, expiringIn7DaysCount, expiringIn3DaysCount, expiredCount } = useProducts();
   const [searchQuery, setSearchQuery] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState<ExpirationStatus | 'all'>('all');
   const [sortOrder, setSortOrder] = React.useState<keyof Product | 'nome'>('validade');
@@ -53,7 +53,8 @@ export default function DashboardPage() {
     all: products.length,
     safe: safeCount,
     expiringSoon: expiringSoonCount,
-    expiringIn2Days: expiringIn2DaysCount,
+    expiringIn7Days: expiringIn7DaysCount,
+    expiringIn3Days: expiringIn3DaysCount,
     expired: expiredCount,
   };
 
@@ -110,12 +111,13 @@ export default function DashboardPage() {
       </div>
 
       <Tabs value={statusFilter} onValueChange={(value) => setStatusFilter(value as any)}>
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-3 md:grid-cols-6">
           <TabsTrigger value="all">Todos ({statusCounts.all})</TabsTrigger>
           <TabsTrigger value="safe" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary-foreground">OK ({statusCounts.safe})</TabsTrigger>
-          <TabsTrigger value="expiringSoon" className="data-[state=active]:bg-warning/20 data-[state=active]:text-warning-foreground">5 dias ({statusCounts.expiringSoon})</TabsTrigger>
-          <TabsTrigger value="expiringIn2Days" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-500">Até 2 dias ({statusCounts.expiringIn2Days})</TabsTrigger>
-          <TabsTrigger value="expired" className="data-[state=active]:bg-destructive/20 data-[state=active]:text-destructive-foreground">Vencido ({statusCounts.expired})</TabsTrigger>
+          <TabsTrigger value="expiringSoon" className="data-[state=active]:bg-warning/20 data-[state=active]:text-warning-foreground">15 dias ({statusCounts.expiringSoon})</TabsTrigger>
+          <TabsTrigger value="expiringIn7Days" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-500">7 dias ({statusCounts.expiringIn7Days})</TabsTrigger>
+          <TabsTrigger value="expiringIn3Days" className="data-[state=active]:bg-destructive/20 data-[state=active]:text-destructive-foreground">3 dias ({statusCounts.expiringIn3Days})</TabsTrigger>
+          <TabsTrigger value="expired" className="data-[state=active]:bg-black/20 data-[state=active]:text-black dark:data-[state=active]:bg-white/20 dark:data-[state=active]:text-white">Vencido ({statusCounts.expired})</TabsTrigger>
         </TabsList>
       </Tabs>
 

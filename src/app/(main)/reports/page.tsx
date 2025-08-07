@@ -19,29 +19,32 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const STATUS_OPTIONS: { id: ExpirationStatus; label: string }[] = [
     { id: 'safe', label: 'OK' },
-    { id: 'expiringSoon', label: 'Venc. 5 dias' },
-    { id: 'expiringIn2Days', label: 'Venc. até 2 dias' },
+    { id: 'expiringSoon', label: 'Venc. 15 dias' },
+    { id: 'expiringIn7Days', label: 'Venc. até 7 dias' },
+    { id: 'expiringIn3Days', label: 'Venc. até 3 dias' },
     { id: 'expired', label: 'Vencido' },
 ];
 const productCategories = ['Cam.Bebidas', 'cam.laticinios', 'cam.congelados', 'cam.sorvete', 'Cam.Fiambra'];
 
 
 export default function ReportsPage() {
-  const { products, loading, expiredCount, expiringIn2DaysCount, expiringSoonCount, safeCount, totalCount } = useProducts();
+  const { products, loading, expiredCount, expiringIn3DaysCount, expiringIn7DaysCount, expiringSoonCount, safeCount, totalCount } = useProducts();
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [selectedStatuses, setSelectedStatuses] = React.useState<Record<ExpirationStatus, boolean>>({
     safe: true,
     expiringSoon: true,
-    expiringIn2Days: true,
+    expiringIn7Days: true,
+    expiringIn3Days: true,
     expired: true,
   });
   const [selectedCategory, setSelectedCategory] = React.useState('all');
 
   const chartData = [
     { name: 'OK', total: safeCount, fill: 'hsl(var(--primary))' },
-    { name: 'Venc. 5 dias', total: expiringSoonCount, fill: 'hsl(var(--warning))' },
-    { name: 'Venc. até 2 dias', total: expiringIn2DaysCount, fill: 'hsl(var(--orange))' },
-    { name: 'Vencido', total: expiredCount, fill: 'hsl(var(--destructive))' },
+    { name: 'Venc. 15 dias', total: expiringSoonCount, fill: 'hsl(var(--warning))' },
+    { name: 'Venc. 7 dias', total: expiringIn7DaysCount, fill: 'hsl(var(--orange))' },
+    { name: 'Venc. 3 dias', total: expiringIn3DaysCount, fill: 'hsl(var(--destructive))' },
+    { name: 'Vencido', total: expiredCount, fill: 'hsl(var(--foreground))' },
   ];
   
   const StatCard = ({ title, value, icon: Icon, colorClass, isLoading }: { title: string, value: number, icon: React.ElementType, colorClass: string, isLoading: boolean }) => (
@@ -109,7 +112,8 @@ export default function ReportsPage() {
     setSelectedStatuses({
         safe: checked,
         expiringSoon: checked,
-        expiringIn2Days: checked,
+        expiringIn7Days: checked,
+        expiringIn3Days: checked,
         expired: checked,
     });
   };
@@ -189,12 +193,13 @@ export default function ReportsPage() {
         </Dialog>
       </header>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
         <StatCard title="Total de Produtos" value={totalCount} icon={Package} colorClass="" isLoading={loading} />
         <StatCard title="OK" value={safeCount} icon={CheckCircle2} colorClass="text-primary" isLoading={loading} />
-        <StatCard title="Venc. 5 dias" value={expiringSoonCount} icon={AlertTriangle} colorClass="text-yellow-500" isLoading={loading} />
-        <StatCard title="Venc. até 2 dias" value={expiringIn2DaysCount} icon={AlertTriangle} colorClass="text-orange-500" isLoading={loading} />
-        <StatCard title="Vencidos" value={expiredCount} icon={XCircle} colorClass="text-red-500" isLoading={loading} />
+        <StatCard title="Venc. 15 dias" value={expiringSoonCount} icon={AlertTriangle} colorClass="text-yellow-500" isLoading={loading} />
+        <StatCard title="Venc. 7 dias" value={expiringIn7DaysCount} icon={AlertTriangle} colorClass="text-orange-500" isLoading={loading} />
+        <StatCard title="Venc. 3 dias" value={expiringIn3DaysCount} icon={AlertTriangle} colorClass="text-red-500" isLoading={loading} />
+        <StatCard title="Vencidos" value={expiredCount} icon={XCircle} colorClass="text-black dark:text-white" isLoading={loading} />
       </div>
 
        <div className="grid gap-6 md:grid-cols-1">
