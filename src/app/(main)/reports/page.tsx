@@ -4,14 +4,14 @@
 import * as React from 'react';
 import { useProducts } from '@/hooks/use-products';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, CheckCircle2, Download, Package, PieChart, XCircle } from 'lucide-react';
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Pie, Cell, Legend } from 'recharts';
+import { AlertTriangle, CheckCircle2, Download, Package, PieChart as PieChartIcon, XCircle } from 'lucide-react';
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Pie, Cell, Legend, PieChart } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { formatDate, getExpirationStatus, getExpirationStatusText } from '@/lib/utils';
 import type { Product } from '@/lib/types';
 import type { ExpirationStatus } from '@/lib/utils';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -253,7 +253,7 @@ export default function ReportsPage() {
                         </div>
                     ) : categoryChartData.length === 0 ? (
                          <div className="flex flex-col items-center justify-center text-center h-[300px] text-muted-foreground">
-                            <PieChart className="w-12 h-12 mb-4" />
+                            <PieChartIcon className="w-12 h-12 mb-4" />
                             <p>Nenhum produto com categoria definida ainda.</p>
                         </div>
                     ) : (
@@ -261,6 +261,7 @@ export default function ReportsPage() {
                         <ResponsiveContainer width="100%" height="100%">
                              <PieChart>
                                 <Tooltip
+                                    cursor={{ fill: "hsl(var(--muted))" }}
                                     contentStyle={{
                                         background: "hsl(var(--background))",
                                         border: "1px solid hsl(var(--border))",
@@ -273,17 +274,43 @@ export default function ReportsPage() {
                                     nameKey="name"
                                     cx="50%"
                                     cy="50%"
-                                    outerRadius={80}
-                                    innerRadius={50}
+                                    outerRadius={100}
+                                    innerRadius={60}
                                     paddingAngle={5}
                                     labelLine={false}
-                                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                                    label={({
+                                        cx,
+                                        cy,
+                                        midAngle,
+                                        innerRadius,
+                                        outerRadius,
+                                        percent,
+                                        index,
+                                    }) => {
+                                        const RADIAN = Math.PI / 180;
+                                        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+                                        return (
+                                        <text
+                                            x={x}
+                                            y={y}
+                                            fill="hsl(var(--card-foreground))"
+                                            textAnchor={x > cx ? 'start' : 'end'}
+                                            dominantBaseline="central"
+                                            className='text-xs font-medium'
+                                        >
+                                            {`${(percent * 100).toFixed(0)}%`}
+                                        </text>
+                                        );
+                                    }}
                                 >
                                     {categoryChartData.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                                     ))}
                                 </Pie>
-                                <Legend />
+                                <Legend iconSize={12} iconType="circle" />
                             </PieChart>
                         </ResponsiveContainer>
                         </div>
@@ -294,4 +321,5 @@ export default function ReportsPage() {
 
     </div>
   );
-}
+
+    
