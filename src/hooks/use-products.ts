@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -39,41 +40,38 @@ export function useProducts() {
     return () => unsubscribe();
   }, []);
 
-  const { counts, categoryCounts } = useMemo(() => {
-    const statusCounts = {
-      expired: 0,
-      expiringIn2Days: 0,
-      expiringSoon: 0,
-      safe: 0,
-    };
-    
-    const categoryCounts: { [key: string]: number } = {};
+  const { expiredCount, expiringIn2DaysCount, expiringSoonCount, safeCount, totalCount } = useMemo(() => {
+    let expired = 0;
+    let expiringIn2Days = 0;
+    let expiringSoon = 0;
+    let safe = 0;
 
     products.forEach(p => {
       const status = getExpirationStatus(p.validade.toDate());
-      if (status in statusCounts) {
-        statusCounts[status]++;
-      }
-      
-      const category = p.categoria || 'Sem Categoria';
-      if (category in categoryCounts) {
-        categoryCounts[category]++;
-      } else {
-        categoryCounts[category] = 1;
+      switch (status) {
+        case 'expired':
+          expired++;
+          break;
+        case 'expiringIn2Days':
+          expiringIn2Days++;
+          break;
+        case 'expiringSoon':
+          expiringSoon++;
+          break;
+        case 'safe':
+          safe++;
+          break;
       }
     });
 
     return {
-      counts: {
-        expiredCount: statusCounts.expired,
-        expiringIn2DaysCount: statusCounts.expiringIn2Days,
-        expiringSoonCount: statusCounts.expiringSoon,
-        safeCount: statusCounts.safe,
-        totalCount: products.length,
-      },
-      categoryCounts
+      expiredCount: expired,
+      expiringIn2DaysCount: expiringIn2Days,
+      expiringSoonCount: expiringSoon,
+      safeCount: safe,
+      totalCount: products.length
     };
   }, [products]);
 
-  return { products, loading, error, ...counts, categoryCounts };
+  return { products, loading, error, expiredCount, expiringIn2DaysCount, expiringSoonCount, safeCount, totalCount };
 }
