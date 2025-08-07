@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -10,12 +11,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import { updateProductAction } from '@/lib/actions';
+import { updateProductAction, getProductNames } from '@/lib/actions';
 import { Camera, Check, ChevronsUpDown, Loader2, PlusCircle, Save, Wand2 } from 'lucide-react';
 import Image from 'next/image';
 import { extractProductDetails } from '@/ai/flows/extract-product-details';
 import { isValid, parse, parseISO, format } from 'date-fns';
-import { collection, getDocs, orderBy, query, doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db, storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import type { Product, ProductName } from '@/lib/types';
@@ -41,13 +42,6 @@ const FormSchema = z.object({
 type FormValues = z.infer<typeof FormSchema>;
 
 const productCategories = ['Cam.Bebidas', 'cam.laticinios', 'cam.congelados', 'cam.sorvete', 'Cam.Fiambra'];
-
-async function getProductNames(): Promise<ProductName[]> {
-    const productNamesRef = collection(db, 'nomesDeProdutos');
-    const q = query(productNamesRef, orderBy('nome', 'asc'));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ProductName));
-}
 
 async function getProductById(id: string): Promise<Product | null> {
     const productRef = doc(db, 'produtos', id);

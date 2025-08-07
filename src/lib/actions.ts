@@ -6,6 +6,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { adminDb } from './firebase-admin';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import type { ProductName } from './types';
 
 const ProductSchema = z.object({
   nome: z.string().trim().min(1, 'O nome do produto é obrigatório'),
@@ -35,6 +36,17 @@ async function ensureProductNameExists(productName: string) {
         const newNameRef = adminDb.collection('nomesDeProdutos').doc();
         await newNameRef.set({ nome: trimmedName, criadoEm: Timestamp.now() });
     }
+}
+
+export async function getProductNames(): Promise<ProductName[]> {
+    if (!adminDb) {
+      console.error("getProductNames: Firebase Admin not initialized");
+      return [];
+    };
+    const productNamesRef = adminDb.collection('nomesDeProdutos');
+    const q = productNamesRef.orderBy('nome', 'asc');
+    const querySnapshot = await q.get();
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ProductName));
 }
 
 export async function addProductAction(productData: {
