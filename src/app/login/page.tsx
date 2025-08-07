@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -24,6 +24,7 @@ const LoginSchema = z.object({
 type FormValues = z.infer<typeof LoginSchema>;
 
 export default function LoginPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(searchParams.get('error'));
@@ -41,6 +42,9 @@ export default function LoginPage() {
     setError(null);
     try {
       await loginAction(data);
+      // Redireciona o usuário para o dashboard após o sucesso do login.
+      // O middleware cuidará de qualquer outra lógica de rota.
+      router.push('/dashboard');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.';
       setError(errorMessage);
