@@ -39,29 +39,41 @@ export function useProducts() {
     return () => unsubscribe();
   }, []);
 
-  const counts = useMemo(() => {
+  const { counts, categoryCounts } = useMemo(() => {
     const statusCounts = {
       expired: 0,
       expiringIn2Days: 0,
       expiringSoon: 0,
       safe: 0,
     };
+    
+    const categoryCounts: { [key: string]: number } = {};
 
     products.forEach(p => {
       const status = getExpirationStatus(p.validade.toDate());
       if (status in statusCounts) {
         statusCounts[status]++;
       }
+      
+      const category = p.categoria || 'Sem Categoria';
+      if (category in categoryCounts) {
+        categoryCounts[category]++;
+      } else {
+        categoryCounts[category] = 1;
+      }
     });
 
     return {
-      expiredCount: statusCounts.expired,
-      expiringIn2DaysCount: statusCounts.expiringIn2Days,
-      expiringSoonCount: statusCounts.expiringSoon,
-      safeCount: statusCounts.safe,
-      totalCount: products.length,
+      counts: {
+        expiredCount: statusCounts.expired,
+        expiringIn2DaysCount: statusCounts.expiringIn2Days,
+        expiringSoonCount: statusCounts.expiringSoon,
+        safeCount: statusCounts.safe,
+        totalCount: products.length,
+      },
+      categoryCounts
     };
   }, [products]);
 
-  return { products, loading, error, ...counts };
+  return { products, loading, error, ...counts, categoryCounts };
 }

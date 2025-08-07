@@ -3,9 +3,9 @@
 
 import * as React from 'react';
 import { useProducts } from '@/hooks/use-products';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, CheckCircle2, Download, Package, XCircle } from 'lucide-react';
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertTriangle, CheckCircle2, Download, Package, PieChart, XCircle } from 'lucide-react';
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Pie, Cell, Legend } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { formatDate, getExpirationStatus, getExpirationStatusText } from '@/lib/utils';
@@ -24,10 +24,11 @@ const STATUS_OPTIONS: { id: ExpirationStatus; label: string }[] = [
     { id: 'expired', label: 'Vencido' },
 ];
 const productCategories = ['Cam.Bebidas', 'cam.laticinios', 'cam.congelados', 'cam.sorvete', 'Cam.Fiambra'];
+const CHART_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--muted-foreground))'];
 
 
 export default function ReportsPage() {
-  const { products, loading, expiredCount, expiringIn2DaysCount, expiringSoonCount, safeCount, totalCount } = useProducts();
+  const { products, loading, expiredCount, expiringIn2DaysCount, expiringSoonCount, safeCount, totalCount, categoryCounts } = useProducts();
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [selectedStatuses, setSelectedStatuses] = React.useState<Record<ExpirationStatus, boolean>>({
     safe: true,
@@ -37,12 +38,19 @@ export default function ReportsPage() {
   });
   const [selectedCategory, setSelectedCategory] = React.useState('all');
 
-  const chartData = [
+  const statusChartData = [
     { name: 'OK', count: safeCount, fill: 'var(--color-safe)' },
     { name: 'Venc. 5 dias', count: expiringSoonCount, fill: 'var(--color-warning)' },
     { name: 'Venc. até 2 dias', count: expiringIn2DaysCount, fill: 'var(--color-orange)' },
     { name: 'Vencido', count: expiredCount, fill: 'var(--color-destructive)' },
   ];
+
+  const categoryChartData = React.useMemo(() => {
+    return Object.entries(categoryCounts).map(([name, value]) => ({
+      name,
+      value,
+    }));
+  }, [categoryCounts]);
   
   const StatCard = ({ title, value, icon: Icon, colorClass, isLoading }: { title: string, value: number, icon: React.ElementType, colorClass: string, isLoading: boolean }) => (
     <Card>
@@ -123,7 +131,7 @@ export default function ReportsPage() {
         <div>
             <h1 className="text-3xl font-bold font-headline tracking-tight">Relatórios do Inventário</h1>
             <p className="text-muted-foreground">
-            Uma visão geral dos status de validade de seus produtos.
+            Uma visão geral dos status de validade e categorias de seus produtos.
             </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -197,41 +205,93 @@ export default function ReportsPage() {
         <StatCard title="Vencidos" value={expiredCount} icon={XCircle} colorClass="text-red-500" isLoading={loading} />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-headline">Visão Geral do Status dos Produtos</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-             <div className="w-full h-[300px]">
-                <Skeleton className="h-full w-full" />
-             </div>
-          ) : (
-            <div className="w-full h-[300px]" style={{
-              '--color-safe': 'hsl(var(--primary))',
-              '--color-warning': 'hsl(var(--warning))',
-              '--color-orange': 'hsl(var(--orange))',
-              '--color-destructive': 'hsl(var(--destructive))',
-            } as React.CSSProperties}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-                  <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
-                  <Tooltip
-                    contentStyle={{
-                      background: "hsl(var(--background))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "var(--radius)",
-                    }}
-                    cursor={{fill: 'hsl(var(--muted))'}}
-                  />
-                  <Bar dataKey="count" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+       <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+                <CardHeader>
+                <CardTitle className="font-headline">Visão Geral do Status</CardTitle>
+                </CardHeader>
+                <CardContent>
+                {loading ? (
+                    <div className="w-full h-[300px]">
+                        <Skeleton className="h-full w-full" />
+                    </div>
+                ) : (
+                    <div className="w-full h-[300px]" style={{
+                    '--color-safe': 'hsl(var(--primary))',
+                    '--color-warning': 'hsl(var(--warning))',
+                    '--color-orange': 'hsl(var(--orange))',
+                    '--color-destructive': 'hsl(var(--destructive))',
+                    } as React.CSSProperties}>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={statusChartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                        <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+                        <Tooltip
+                            contentStyle={{
+                            background: "hsl(var(--background))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "var(--radius)",
+                            }}
+                            cursor={{fill: 'hsl(var(--muted))'}}
+                        />
+                        <Bar dataKey="count" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                    </div>
+                )}
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="font-headline">Distribuição por Categoria</CardTitle>
+                </CardHeader>
+                <CardContent>
+                     {loading ? (
+                        <div className="w-full h-[300px]">
+                            <Skeleton className="h-full w-full" />
+                        </div>
+                    ) : categoryChartData.length === 0 ? (
+                         <div className="flex flex-col items-center justify-center text-center h-[300px] text-muted-foreground">
+                            <PieChart className="w-12 h-12 mb-4" />
+                            <p>Nenhum produto com categoria definida ainda.</p>
+                        </div>
+                    ) : (
+                        <div className="w-full h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                             <PieChart>
+                                <Tooltip
+                                    contentStyle={{
+                                        background: "hsl(var(--background))",
+                                        border: "1px solid hsl(var(--border))",
+                                        borderRadius: "var(--radius)",
+                                    }}
+                                />
+                                <Pie
+                                    data={categoryChartData}
+                                    dataKey="value"
+                                    nameKey="name"
+                                    cx="50%"
+                                    cy="50%"
+                                    outerRadius={80}
+                                    innerRadius={50}
+                                    paddingAngle={5}
+                                    labelLine={false}
+                                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                                >
+                                    {categoryChartData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Legend />
+                            </PieChart>
+                        </ResponsiveContainer>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+      </div>
+
     </div>
   );
 }
