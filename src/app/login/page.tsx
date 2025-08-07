@@ -2,6 +2,7 @@
 'use client';
 
 import * as React from 'react';
+import { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,7 +24,7 @@ const LoginSchema = z.object({
 
 type FormValues = z.infer<typeof LoginSchema>;
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -59,55 +60,64 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
-      <div className="w-full max-w-md">
-        <div className="flex justify-center mb-6">
-            <ValicareLogo className="w-16 h-16 text-primary" />
-        </div>
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-headline">Bem-vindo ao Valicare</CardTitle>
-            <CardDescription>Faça login para acessar seu painel.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Erro de Autenticação</AlertTitle>
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="username">Usuário</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="admin"
-                  {...form.register('username')}
-                  disabled={isSubmitting}
-                />
-                {form.formState.errors.username && <p className="text-sm font-medium text-destructive">{form.formState.errors.username.message}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  {...form.register('password')}
-                  disabled={isSubmitting}
-                />
-                 {form.formState.errors.password && <p className="text-sm font-medium text-destructive">{form.formState.errors.password.message}</p>}
-              </div>
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Entrar
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+    <div className="w-full max-w-md">
+      <div className="flex justify-center mb-6">
+          <ValicareLogo className="w-16 h-16 text-primary" />
       </div>
+      <Card>
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-headline">Bem-vindo ao Valicare</CardTitle>
+          <CardDescription>Faça login para acessar seu painel.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Erro de Autenticação</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="username">Usuário</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="admin"
+                {...form.register('username')}
+                disabled={isSubmitting}
+              />
+              {form.formState.errors.username && <p className="text-sm font-medium text-destructive">{form.formState.errors.username.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                {...form.register('password')}
+                disabled={isSubmitting}
+              />
+               {form.formState.errors.password && <p className="text-sm font-medium text-destructive">{form.formState.errors.password.message}</p>}
+            </div>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Entrar
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+
+export default function LoginPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
+      <Suspense fallback={<div>Loading...</div>}>
+        <LoginForm />
+      </Suspense>
     </div>
   );
 }
