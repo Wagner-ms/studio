@@ -26,14 +26,12 @@ export async function loginAction(credentials: z.infer<typeof LoginSchema>) {
   if (username === AUTH_USER && password === AUTH_PASS) {
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
     cookies().set(AUTH_COOKIE_NAME, 'authenticated', { expires, httpOnly: true });
-    
   } else {
     throw new Error('Usuário ou senha inválidos.');
   }
 
-  // O redirecionamento após o login é tratado pelo middleware,
-  // mas podemos forçar aqui para garantir.
-  redirect('/dashboard');
+  // O redirecionamento é tratado pelo middleware, não é necessário aqui.
+  // redirect('/dashboard');
 }
 
 
