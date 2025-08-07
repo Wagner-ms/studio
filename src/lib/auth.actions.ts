@@ -30,8 +30,8 @@ export async function loginAction(credentials: z.infer<typeof LoginSchema>) {
     throw new Error('Usuário ou senha inválidos.');
   }
 
-  // O redirecionamento é tratado pelo middleware, não é necessário aqui.
-  // redirect('/dashboard');
+  // O redirecionamento é tratado pelo lado do cliente na página de login,
+  // após esta ação ser concluída com sucesso.
 }
 
 
