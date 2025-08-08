@@ -1,7 +1,8 @@
-// src/app/(main)/layout.tsx
+
+'use client';
 
 import { MainNav } from "@/components/main-nav";
-import { Sidebar } from "@/components/ui/sidebar";
+import { Sidebar, useSidebar } from "@/components/ui/sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import * as React from 'react';
 import Link from "next/link";
@@ -23,11 +24,17 @@ function LogoutForm() {
 }
 
 function SidebarNavigation() {
+    const { setOpenMobile } = useSidebar();
+
     const menuItems = [
       { href: '/dashboard', label: 'Painel', icon: LayoutDashboard },
       { href: '/reports', label: 'Relatórios', icon: BarChart3 },
       { href: '/notifications', label: 'Notificações', icon: Bell },
     ];
+    
+    const handleLinkClick = () => {
+        setOpenMobile(false);
+    }
 
     return (
         <Sidebar>
@@ -41,7 +48,7 @@ function SidebarNavigation() {
                 <SidebarMenu>
                     {menuItems.map((item) => (
                          <SidebarMenuItem key={item.href}>
-                            <Link href={item.href} passHref>
+                            <Link href={item.href} passHref onClick={handleLinkClick}>
                                 <SidebarMenuButton as="a" href={item.href} tooltip={item.label}>
                                     <item.icon />
                                     <span>{item.label}</span>
@@ -53,7 +60,7 @@ function SidebarNavigation() {
             </SidebarContent>
             <SidebarFooter>
                  <Button asChild className="w-full">
-                    <Link href="/add">
+                    <Link href="/add" onClick={handleLinkClick}>
                         <PlusCircle />
                         <span>Adicionar Produto</span>
                     </Link>
@@ -72,11 +79,13 @@ export default function MainLayout({
 }) {
   return (
     <SidebarProvider>
-        <SidebarNavigation />
-        <main className="flex-1 bg-muted/40">
-            <MainNav />
-            {children}
-        </main>
+        <div className="flex min-h-screen">
+          <SidebarNavigation />
+          <main className="flex-1 bg-muted/40">
+              <MainNav />
+              {children}
+          </main>
+        </div>
     </SidebarProvider>
   );
 }
