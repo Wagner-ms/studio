@@ -41,12 +41,17 @@ async function ensureProductNameExists(productName: string) {
 export async function getProductNames(): Promise<ProductName[]> {
     if (!adminDb) {
       console.error("getProductNames: Firebase Admin not initialized");
-      return [];
+      throw new Error("A conexão com o servidor não foi inicializada.");
     };
-    const productNamesRef = adminDb.collection('nomesDeProdutos');
-    const q = productNamesRef.orderBy('nome', 'asc');
-    const querySnapshot = await q.get();
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ProductName));
+    try {
+        const productNamesRef = adminDb.collection('nomesDeProdutos');
+        const q = productNamesRef.orderBy('nome', 'asc');
+        const querySnapshot = await q.get();
+        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ProductName));
+    } catch (error) {
+        console.error("Error fetching product names:", error);
+        throw new Error("Não foi possível buscar os nomes dos produtos.");
+    }
 }
 
 export async function addProductAction(productData: {
@@ -173,3 +178,5 @@ export async function deleteProductAction(productId: string) {
     throw new Error(errorMessage);
   }
 }
+
+    
