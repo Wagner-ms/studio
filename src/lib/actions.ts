@@ -47,7 +47,14 @@ export async function getProductNames(): Promise<ProductName[]> {
         const productNamesRef = adminDb.collection('nomesDeProdutos');
         const q = productNamesRef.orderBy('nome', 'asc');
         const querySnapshot = await q.get();
-        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ProductName));
+        // Retorna apenas 'id' e 'nome', que são serializáveis e necessários pelo cliente.
+        return querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return { 
+                id: doc.id, 
+                nome: data.nome 
+            };
+        });
     } catch (error) {
         console.error("Error fetching product names:", error);
         throw new Error("Não foi possível buscar os nomes dos produtos.");
