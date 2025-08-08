@@ -1,5 +1,5 @@
 
-import { initializeApp, getApps, cert, getApp } from 'firebase-admin/app';
+import { initializeApp, getApps, cert, getApp, App } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 
@@ -10,26 +10,25 @@ const serviceAccount = {
   privateKey: serviceAccountKey ? serviceAccountKey.replace(/\\n/g, '\n') : undefined,
 };
 
-let adminDb: ReturnType<typeof getFirestore> | null = null;
-let adminStorage: ReturnType<typeof getStorage> | null = null;
+let app: App;
 
-try {
-  if (getApps().length === 0 && serviceAccount.projectId && serviceAccount.clientEmail && serviceAccount.privateKey) {
-    initializeApp({
+if (getApps().length === 0) {
+  if (serviceAccount.projectId && serviceAccount.clientEmail && serviceAccount.privateKey) {
+    app = initializeApp({
       credential: cert(serviceAccount as any),
       storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
     });
-  }
-
-  if (getApps().length > 0) {
-    adminDb = getFirestore(getApp());
-    adminStorage = getStorage(getApp());
   } else {
-    console.error('Credenciais do Firebase Admin incompletas ou ausentes. Não foi possível inicializar o app admin.');
+    console.warn('Credenciais do Firebase Admin incompletas ou ausentes. O app admin não será inicializado no servidor.');
+    // Criamos um objeto `app` "mock" para evitar que a aplicação quebre em ambientes sem credenciais.
+    // As chamadas ao DB e Storage falharão com mensagens de erro claras.
+    app = {} as App; 
   }
-
-} catch (error) {
-    console.error('Falha na inicialização do Firebase Admin:', error);
+} else {
+  app = getApp();
 }
+
+const adminDb = app.name ? getFirestore(app) : null;
+const adminStorage = app.name ? getStorage(app) : null;
 
 export { adminDb, adminStorage };
