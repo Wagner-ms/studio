@@ -2,6 +2,7 @@
 'use client';
 
 import * as React from 'react';
+import { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type SubmitHandler } from 'react-hook-form';
@@ -25,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const FormSchema = z.object({
   nome: z.string().min(1, 'O nome do produto é obrigatório'),
@@ -40,7 +42,7 @@ type FormValues = z.infer<typeof FormSchema>;
 
 const productCategories = ['Cam.Bebidas', 'cam.laticinios', 'cam.congelados', 'cam.sorvete', 'Cam.Fiambra'];
 
-export default function AddProductPage() {
+function AddProductForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -376,6 +378,51 @@ export default function AddProductPage() {
       </Card>
     </div>
   );
+}
+
+function AddProductPageSkeleton() {
+    return (
+        <div className="max-w-2xl mx-auto p-4 sm:p-6">
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-8 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                </CardHeader>
+                <CardContent className="space-y-6 pt-6">
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-1/4" />
+                        <Skeleton className="w-full aspect-video rounded-lg" />
+                    </div>
+                     <Skeleton className="h-10 w-full" />
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-1/4" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                     <div className="space-y-2">
+                        <Skeleton className="h-4 w-1/4" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                     <div className="space-y-2">
+                        <Skeleton className="h-4 w-1/4" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-1/4" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                     <Skeleton className="h-10 w-full" />
+                </CardContent>
+            </Card>
+        </div>
+    );
+}
+
+export default function AddProductPage() {
+    return (
+        <Suspense fallback={<AddProductPageSkeleton />}>
+            <AddProductForm />
+        </Suspense>
+    )
 }
 
     
