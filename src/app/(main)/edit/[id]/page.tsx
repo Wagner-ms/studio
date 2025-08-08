@@ -113,6 +113,11 @@ export default function EditProductPage() {
             }
         } catch (error) {
              setServerError("Falha ao carregar os dados do produto.");
+             toast({
+                variant: "destructive",
+                title: "Erro ao carregar dados",
+                description: "Não foi possível carregar a lista de produtos existentes ou os detalhes deste produto.",
+            });
         } finally {
             setIsPageLoading(false);
         }
@@ -458,3 +463,5 @@ export default function EditProductPage() {
     </div>
   );
 }
+
+    

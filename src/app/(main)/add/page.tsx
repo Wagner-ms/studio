@@ -62,7 +62,20 @@ export default function AddProductPage() {
   });
 
   React.useEffect(() => {
-    getProductNames().then(setProductNames);
+    const fetchNames = async () => {
+        try {
+            const names = await getProductNames();
+            setProductNames(names);
+        } catch (error) {
+            console.error("Failed to fetch product names:", error);
+            toast({
+                variant: "destructive",
+                title: "Erro ao carregar nomes",
+                description: "Não foi possível carregar a lista de produtos existentes.",
+            });
+        }
+    };
+    fetchNames();
   }, []);
 
 
@@ -364,3 +377,5 @@ export default function AddProductPage() {
     </div>
   );
 }
+
+    
