@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 export const metadata: Metadata = {
   title: 'Valicare',
   description: 'Controle de validade de produtos perecíveis',
+  icons: null,
 };
 
 export default function RootLayout({
