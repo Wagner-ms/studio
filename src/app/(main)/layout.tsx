@@ -10,7 +10,6 @@ import { ValicareLogo } from "@/components/icons";
 import { SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/lib/auth.actions";
-import Image from "next/image";
 
 function LogoutForm() {
     return (
@@ -78,22 +77,6 @@ export default function MainLayout({
             <MainNav />
             {children}
         </main>
-        <a 
-            href="https://www.instagram.com/ino_tec_safe/#" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="fixed bottom-4 right-4 z-50 transition-opacity hover:opacity-100 opacity-50"
-            title="Desenvolvido por INO TEC"
-        >
-            <Image 
-                src="/inotec-logo.png" 
-                alt="Logo INO TEC Soluções Digitais" 
-                width={100} 
-                height={100} 
-                className="h-auto"
-                data-ai-hint="logo"
-            />
-        </a>
     </SidebarProvider>
   );
 }
