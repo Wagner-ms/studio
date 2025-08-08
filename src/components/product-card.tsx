@@ -21,8 +21,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn, formatDate, getExpirationStatus } from '@/lib/utils';
-import { AlertTriangle, CheckCircle2, Eye, FileQuestion, Folder, Loader2, Pencil, Tag, Trash2, XCircle } from 'lucide-react';
+import { cn, formatDate, getExpirationStatus, getDaysUntilExpirationText } from '@/lib/utils';
+import { AlertTriangle, CalendarClock, CheckCircle2, Eye, FileQuestion, Folder, Loader2, Pencil, Tag, Trash2, XCircle } from 'lucide-react';
 import type { ExpirationStatus } from '@/lib/utils';
 import {
   AlertDialog,
@@ -121,14 +121,20 @@ export function ProductCard({ product }: { product: Product }) {
           )}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col gap-2 flex-grow">
-        <Badge variant={badgeVariant} className="w-fit">
-          <Icon className="mr-2 h-4 w-4" />
-          {text}
-        </Badge>
-        <p className="text-sm text-muted-foreground">
-          Vence em: <span className="font-medium text-foreground">{formatDate(expirationDate)}</span>
-        </p>
+      <CardContent className="flex flex-col gap-4 flex-grow">
+        <div className='flex flex-col gap-2'>
+            <Badge variant={badgeVariant} className="w-fit">
+              <Icon className="mr-2 h-4 w-4" />
+              {text}
+            </Badge>
+            <p className="text-sm text-muted-foreground">
+              Vence em: <span className="font-medium text-foreground">{formatDate(expirationDate)}</span>
+            </p>
+        </div>
+        <div className="flex items-center gap-2 text-sm font-medium text-foreground p-2 rounded-md bg-muted">
+            <CalendarClock className="w-5 h-5 text-primary"/>
+            <span>{getDaysUntilExpirationText(expirationDate)}</span>
+        </div>
       </CardContent>
       <CardFooter className="flex gap-2">
         <Dialog>
@@ -210,9 +216,12 @@ export function ProductCardSkeleton() {
         <Skeleton className="h-4 w-1/2 mt-2" />
         <Skeleton className="h-4 w-1/3 mt-1" />
       </CardHeader>
-      <CardContent>
-        <Skeleton className="h-6 w-1/4" />
-        <Skeleton className="h-4 w-1/2 mt-3" />
+      <CardContent className="flex flex-col gap-4">
+        <div className='flex flex-col gap-2'>
+            <Skeleton className="h-6 w-1/4" />
+            <Skeleton className="h-4 w-1/2" />
+        </div>
+        <Skeleton className="h-10 w-full" />
       </CardContent>
       <CardFooter className="flex justify-between gap-2">
         <Skeleton className="h-10 flex-1" />

@@ -52,3 +52,21 @@ export function getExpirationStatusText(status: ExpirationStatus): string {
             return '';
     }
 }
+
+export function getDaysUntilExpirationText(expirationDate: Date | string): string {
+  const date = typeof expirationDate === 'string' ? parseISO(expirationDate) : expirationDate;
+  const today = startOfDay(new Date());
+  const daysDiff = differenceInDays(startOfDay(date), today);
+
+  if (daysDiff < 0) {
+    const daysAgo = Math.abs(daysDiff);
+    return `Vencido há ${daysAgo} ${daysAgo === 1 ? 'dia' : 'dias'}`;
+  }
+  if (daysDiff === 0) {
+    return 'Vence hoje';
+  }
+  if (daysDiff === 1) {
+    return 'Vence amanhã';
+  }
+  return `Vence em ${daysDiff} dias`;
+}
