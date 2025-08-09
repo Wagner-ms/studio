@@ -4,31 +4,41 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 
 const serviceAccountKey = process.env.FIREBASE_PRIVATE_KEY;
-const serviceAccount = {
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  privateKey: serviceAccountKey ? serviceAccountKey.replace(/\\n/g, '\n') : undefined,
-};
+
+// Verifica se as credenciais essenciais estão presentes.
+const hasCredentials = 
+    process.env.FIREBASE_PROJECT_ID &&
+    process.env.FIREBASE_CLIENT_EMAIL &&
+    serviceAccountKey;
 
 let app: App;
+let adminDb: ReturnType<typeof getFirestore> | null = null;
+let adminStorage: ReturnType<typeof getStorage> | null = null;
 
 if (getApps().length === 0) {
-  if (serviceAccount.projectId && serviceAccount.clientEmail && serviceAccount.privateKey) {
+  if (hasCredentials) {
+    const serviceAccount = {
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      // A chave privada precisa ter as quebras de linha restauradas.
+      privateKey: serviceAccountKey!.replace(/\\n/g, '\n'),
+    };
+    
     app = initializeApp({
-      credential: cert(serviceAccount as any),
+      credential: cert(serviceAccount),
       storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
     });
+    
+    adminDb = getFirestore(app);
+    adminStorage = getStorage(app);
+
   } else {
-    console.warn('Credenciais do Firebase Admin incompletas ou ausentes. O app admin não será inicializado no servidor.');
-    // Criamos um objeto `app` "mock" para evitar que a aplicação quebre em ambientes sem credenciais.
-    // As chamadas ao DB e Storage falharão com mensagens de erro claras.
-    app = {} as App; 
+    console.warn('As credenciais do Firebase Admin estão incompletas ou ausentes. As funcionalidades do servidor que dependem do Firebase serão desativadas.');
   }
 } else {
   app = getApp();
+  adminDb = getFirestore(app);
+  adminStorage = getStorage(app);
 }
-
-const adminDb = app.name ? getFirestore(app) : null;
-const adminStorage = app.name ? getStorage(app) : null;
 
 export { adminDb, adminStorage };
