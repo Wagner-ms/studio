@@ -1,6 +1,6 @@
 # Guia de Configuração do Projeto no Console do Firebase
 
-Este guia detalha os passos essenciais para configurar seu projeto Firebase (`valicare-xlbs5`) e garantir que a aplicação funcione corretamente.
+Este guia detalha os passos essenciais para configurar seu projeto Firebase (`valicare-xlbs5`) e garantir que a aplicação funcione corretamente, tanto em desenvolvimento local quanto em produção (Netlify, Vercel, etc.).
 
 ## Passo 1: Configurar o Banco de Dados Firestore
 
@@ -54,39 +54,48 @@ A aplicação usa o Storage para fazer o upload das fotos das etiquetas dos prod
     }
     ```
 
-## Passo 3: Gerar Chave de Conta de Serviço (Credenciais do Admin)
+## Passo 3: Obter as Credenciais (Variáveis de Ambiente)
 
-O back-end da aplicação (Server Actions) precisa de credenciais de administrador para se comunicar com o Firebase de forma segura.
+Para que sua aplicação se comunique com o Firebase, ela precisa de dois conjuntos de chaves: as de **Servidor (Admin)** e as de **Cliente (Públicas)**.
 
-1.  No Console do Firebase, clique no ícone de engrenagem ao lado de "Visão geral do projeto" (Project Overview) no canto superior esquerdo e selecione **Configurações do projeto**.
+### 3.1 - Credenciais de Servidor (Admin)
+
+Estas são as chaves **secretas** que permitem que seu backend (Server Actions) gerencie o banco de dados.
+
+1.  No Console do Firebase, clique no ícone de engrenagem ao lado de "Visão geral do projeto" (Project Overview) e selecione **Configurações do projeto**.
 2.  Vá para a aba **Contas de serviço** (Service accounts).
 3.  Clique no botão **Gerar nova chave privada**.
 4.  Um aviso aparecerá. Clique em **Gerar chave** para confirmar.
-5.  O navegador fará o download de um arquivo `.json`. **Guarde este arquivo em um local seguro, pois ele concede acesso total de administrador ao seu projeto Firebase.**
-
-## Passo 4: Adicionar as Credenciais ao seu Projeto
-
-Agora, você precisa adicionar as informações deste arquivo `.json` ao arquivo `.env` na raiz do seu projeto.
-
-1.  Abra o arquivo `.json` que você baixou. Ele terá uma estrutura parecida com esta:
-    ```json
-    {
-      "type": "service_account",
-      "project_id": "valicare-xlbs5",
-      "private_key_id": "...",
-      "private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n",
-      "client_email": "firebase-adminsdk-...@valicare-xlbs5.iam.gserviceaccount.com",
-      "client_id": "...",
-      "auth_uri": "...",
-      "token_uri": "...",
-      "auth_provider_x509_cert_url": "...",
-      "client_x509_cert_url": "..."
-    }
-    ```
-
-2.  Abra o arquivo `.env` do seu projeto e preencha as seguintes variáveis usando os valores do arquivo `.json`:
+5.  O navegador fará o download de um arquivo `.json`. **Guarde este arquivo em um local seguro.**
+6.  Abra o arquivo `.json` e use os valores dele para preencher as seguintes variáveis no seu arquivo `.env`:
     *   `FIREBASE_PROJECT_ID`: Copie o valor de `project_id`.
     *   `FIREBASE_CLIENT_EMAIL`: Copie o valor de `client_email`.
-    *   `FIREBASE_PRIVATE_KEY`: Copie **todo** o conteúdo de `private_key`, incluindo `-----BEGIN PRIVATE KEY-----` e `-----END PRIVATE KEY-----`.
+    *   `FIREBASE_PRIVATE_KEY`: Copie **todo** o conteúdo de `private_key`.
 
-Depois de seguir estes quatro passos, sua aplicação estará completamente configurada para se comunicar com os serviços do Firebase.
+### 3.2 - Credenciais de Cliente (Públicas)
+
+Estas são as chaves **públicas** que permitem que o navegador do usuário se conecte a serviços como o Storage para fazer uploads.
+
+1.  Ainda em **Configurações do projeto**, vá para a aba **Geral**.
+2.  Role para baixo até a seção **Seus apps**.
+3.  Selecione seu aplicativo web (ou crie um se não houver).
+4.  Clique no ícone de engrenagem para ver as **Configurações**.
+5.  Selecione **Configuração do SDK > Configuração** e você verá um objeto de configuração.
+6.  Use esses valores para preencher as seguintes variáveis no seu arquivo `.env` (elas já devem estar lá, mas você pode confirmar):
+    *   `NEXT_PUBLIC_FIREBASE_API_KEY` (valor de `apiKey`)
+    *   `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` (valor de `authDomain`)
+    *   `NEXT_PUBLIC_FIREBASE_PROJECT_ID` (valor de `projectId`)
+    *   `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` (valor de `storageBucket`)
+    *   `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` (valor de `messagingSenderId`)
+    *   `NEXT_PUBLIC_FIREBASE_APP_ID` (valor de `appId`)
+
+## Passo 4: Configurar a Hospedagem (Netlify, Vercel, etc.)
+
+Para que sua aplicação funcione em produção, você deve adicionar **TODAS** as variáveis de ambiente do seu arquivo `.env` nas configurações do seu provedor de hospedagem.
+
+1.  Acesse o dashboard do seu site (ex: Netlify).
+2.  Navegue até a seção de configurações do site, geralmente em **"Site configuration" > "Environment variables"**.
+3.  Clique em **"Add a variable"** e adicione, uma por uma, todas as 9 variáveis do seu arquivo `.env` com seus respectivos valores.
+4.  Após adicionar todas as variáveis, acione um novo deploy do seu site (geralmente em **Deploys > Trigger deploy > Clear cache and deploy site**).
+
+Depois de seguir estes quatro passos, sua aplicação estará completamente configurada para se comunicar com os serviços do Firebase, tanto localmente quanto em produção.
