@@ -24,7 +24,7 @@ const UpdateProductSchema = ProductSchema.extend({
 
 
 async function ensureProductNameExists(productName: string) {
-    if (!adminDb) throw new Error("Firebase Admin not initialized");
+    if (!adminDb) throw new Error("A conexão com o servidor não foi inicializada.");
     const trimmedName = productName.trim();
     if (!trimmedName) return;
 
@@ -48,8 +48,6 @@ export async function getProductNames(): Promise<ProductName[]> {
         const q = productNamesRef.orderBy('nome', 'asc');
         const querySnapshot = await q.get();
         
-        // CORREÇÃO: Mapeia os documentos para retornar apenas os campos serializáveis
-        // necessários pelo cliente (id e nome), descartando o Timestamp 'criadoEm'.
         return querySnapshot.docs.map(doc => {
             const data = doc.data();
             return { 
@@ -87,7 +85,6 @@ export async function addProductAction(productData: {
   try {
     await ensureProductNameExists(nome);
     
-    // Create a UTC date at noon to avoid timezone issues.
     const [year, month, day] = validade.split('-').map(Number);
     const validadeDate = new Date(Date.UTC(year, month - 1, day, 12));
     
@@ -138,7 +135,6 @@ export async function updateProductAction(productData: {
         
         const productRef = adminDb.collection('produtos').doc(id);
         
-        // Create a UTC date at noon to avoid timezone issues.
         const [year, month, day] = validade.split('-').map(Number);
         const validadeDate = new Date(Date.UTC(year, month - 1, day, 12));
         
