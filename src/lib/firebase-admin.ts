@@ -6,7 +6,7 @@ import * as dotenv from 'dotenv';
 
 // Carrega as variáveis de ambiente do arquivo .env na raiz do projeto
 // Isso é crucial para o ambiente de desenvolvimento local.
-dotenv.config({ path: '.env' });
+dotenv.config();
 
 let adminDb: Firestore;
 let adminStorage: Storage;
