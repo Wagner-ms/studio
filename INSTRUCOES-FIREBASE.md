@@ -54,48 +54,24 @@ A aplicação usa o Storage para fazer o upload das fotos das etiquetas dos prod
     }
     ```
 
-## Passo 3: Obter as Credenciais (Variáveis de Ambiente)
+## Passo 3: Obter as Credenciais e Configurar a Hospedagem (Netlify, Vercel, etc.)
 
-Para que sua aplicação se comunique com o Firebase, ela precisa de dois conjuntos de chaves: as de **Servidor (Admin)** e as de **Cliente (Públicas)**.
+Para que sua aplicação funcione em produção, você deve adicionar **TODAS** as variáveis de ambiente necessárias nas configurações do seu provedor de hospedagem. A maneira mais fácil de fazer isso na Netlify é importando um arquivo.
 
-### 3.1 - Credenciais de Servidor (Admin)
+1.  **Crie o arquivo de importação:**
+    *   No seu computador, crie um novo arquivo de texto.
+    *   Copie todo o conteúdo do arquivo `src/.env` que está no seu projeto.
+    *   Cole o conteúdo neste novo arquivo de texto.
+    *   Salve o arquivo com um nome como `minhas-variaveis.env`. **Guarde este arquivo em um local seguro e não o envie para o seu repositório do GitHub.**
 
-Estas são as chaves **secretas** que permitem que seu backend (Server Actions) gerencie o banco de dados.
+2.  **Importe as variáveis na Netlify:**
+    *   Acesse o dashboard do seu site na Netlify.
+    *   Navegue até **Site configuration > Environment variables**.
+    *   Clique no botão **"Import from a file"**.
+    *   Selecione o arquivo `minhas-variaveis.env` que você acabou de criar.
 
-1.  No Console do Firebase, clique no ícone de engrenagem ao lado de "Visão geral do projeto" (Project Overview) e selecione **Configurações do projeto**.
-2.  Vá para a aba **Contas de serviço** (Service accounts).
-3.  Clique no botão **Gerar nova chave privada**.
-4.  Um aviso aparecerá. Clique em **Gerar chave** para confirmar.
-5.  O navegador fará o download de um arquivo `.json`. **Guarde este arquivo em um local seguro.**
-6.  Abra o arquivo `.json` e use os valores dele para preencher as seguintes variáveis no seu arquivo `.env`:
-    *   `FIREBASE_PROJECT_ID`: Copie o valor de `project_id`.
-    *   `FIREBASE_CLIENT_EMAIL`: Copie o valor de `client_email`.
-    *   `FIREBASE_PRIVATE_KEY`: Copie **todo** o conteúdo de `private_key`.
+3.  **Acione um novo deploy:**
+    *   Após a importação ser concluída, vá para a aba **Deploys**.
+    *   Clique em **Trigger deploy > Clear cache and deploy site** para publicar a nova versão com as variáveis corretas.
 
-### 3.2 - Credenciais de Cliente (Públicas)
-
-Estas são as chaves **públicas** que permitem que o navegador do usuário se conecte a serviços como o Storage para fazer uploads.
-
-1.  Ainda em **Configurações do projeto**, vá para a aba **Geral**.
-2.  Role para baixo até a seção **Seus apps**.
-3.  Selecione seu aplicativo web (ou crie um se não houver).
-4.  Clique no ícone de engrenagem para ver as **Configurações**.
-5.  Selecione **Configuração do SDK > Configuração** e você verá um objeto de configuração.
-6.  Use esses valores para preencher as seguintes variáveis no seu arquivo `.env` (elas já devem estar lá, mas você pode confirmar):
-    *   `NEXT_PUBLIC_FIREBASE_API_KEY` (valor de `apiKey`)
-    *   `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` (valor de `authDomain`)
-    *   `NEXT_PUBLIC_FIREBASE_PROJECT_ID` (valor de `projectId`)
-    *   `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` (valor de `storageBucket`)
-    *   `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` (valor de `messagingSenderId`)
-    *   `NEXT_PUBLIC_FIREBASE_APP_ID` (valor de `appId`)
-
-## Passo 4: Configurar a Hospedagem (Netlify, Vercel, etc.)
-
-Para que sua aplicação funcione em produção, você deve adicionar **TODAS** as variáveis de ambiente do seu arquivo `.env` nas configurações do seu provedor de hospedagem.
-
-1.  Acesse o dashboard do seu site (ex: Netlify).
-2.  Navegue até a seção de configurações do site, geralmente em **"Site configuration" > "Environment variables"**.
-3.  Clique em **"Add a variable"** e adicione, uma por uma, todas as 9 variáveis do seu arquivo `.env` com seus respectivos valores.
-4.  Após adicionar todas as variáveis, acione um novo deploy do seu site (geralmente em **Deploys > Trigger deploy > Clear cache and deploy site**).
-
-Depois de seguir estes quatro passos, sua aplicação estará completamente configurada para se comunicar com os serviços do Firebase, tanto localmente quanto em produção.
+Depois de seguir estes passos, sua aplicação estará completamente configurada para se comunicar com os serviços do Firebase em produção.
