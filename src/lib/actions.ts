@@ -45,12 +45,12 @@ export async function getProductNames(): Promise<ProductName[]> {
         const q = productNamesRef.orderBy('nome', 'asc');
         const querySnapshot = await q.get();
         
+        // CORREÇÃO: Retorna apenas os campos necessários (id e nome) para evitar erros de serialização.
         return querySnapshot.docs.map(doc => {
-            const data = doc.data();
             return { 
                 id: doc.id, 
-                nome: data.nome 
-            };
+                nome: doc.data().nome 
+            } as ProductName;
         });
     } catch (error) {
         console.error("Error fetching product names:", error);
