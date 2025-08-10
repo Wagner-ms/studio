@@ -1,57 +1,44 @@
 
-import { initializeApp, getApps, cert, getApp, App } from 'firebase-admin/app';
+import { initializeApp, getApps, cert, getApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 
 const serviceAccountKey = process.env.FIREBASE_PRIVATE_KEY;
 
-// Verifica se as credenciais essenciais estão presentes.
 const hasCredentials = 
     process.env.FIREBASE_PROJECT_ID &&
     process.env.FIREBASE_CLIENT_EMAIL &&
     serviceAccountKey;
 
-let adminDb: ReturnType<typeof getFirestore> | null = null;
-let adminStorage: ReturnType<typeof getStorage> | null = null;
-
-function initializeAdminApp() {
-  if (hasCredentials) {
-    try {
-      const serviceAccount = {
-        projectId: process.env.FIREBASE_PROJECT_ID!,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-        // A chave privada precisa ter as quebras de linha restauradas.
-        // O JSON.parse garante que a string seja interpretada corretamente,
-        // incluindo os caracteres de nova linha (\n).
-        privateKey: JSON.parse(`"${serviceAccountKey!}"`),
-      };
-      
-      const app = initializeApp({
-        credential: cert(serviceAccount),
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-      }, 'admin');
-      
-      adminDb = getFirestore(app);
-      adminStorage = getStorage(app);
-    } catch (error) {
-      console.error("Firebase Admin initialization error:", error);
-      // Se a inicialização falhar, mantenha os serviços como null.
-      adminDb = null;
-      adminStorage = null;
+function getAdminApp() {
+    if (getApps().some(app => app.name === 'admin')) {
+        return getApp('admin');
     }
-  } else {
-    console.warn('As credenciais do Firebase Admin estão incompletas ou ausentes. As funcionalidades do servidor que dependem do Firebase serão desativadas.');
-  }
+
+    if (!hasCredentials) {
+        console.warn('As credenciais do Firebase Admin estão incompletas ou ausentes. As funcionalidades do servidor que dependem do Firebase serão desativadas.');
+        return null;
+    }
+    
+    try {
+        const serviceAccount = {
+            projectId: process.env.FIREBASE_PROJECT_ID!,
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
+            privateKey: serviceAccountKey!.replace(/\\n/g, '\n'),
+        };
+
+        return initializeApp({
+            credential: cert(serviceAccount),
+            storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+        }, 'admin');
+    } catch (error) {
+        console.error("Firebase Admin initialization error:", error);
+        return null;
+    }
 }
 
-
-// Inicializa o app apenas uma vez.
-if (getApps().filter(app => app.name === 'admin').length === 0) {
-    initializeAdminApp();
-} else {
-    const app = getApp('admin');
-    adminDb = getFirestore(app);
-    adminStorage = getStorage(app);
-}
+const adminApp = getAdminApp();
+const adminDb = adminApp ? getFirestore(adminApp) : null;
+const adminStorage = adminApp ? getStorage(adminApp) : null;
 
 export { adminDb, adminStorage };
