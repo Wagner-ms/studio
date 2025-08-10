@@ -2,12 +2,12 @@
 'use server';
 
 import { z } from 'zod';
-import { Timestamp } from 'firebase-admin/firestore';
-import { getAdminDb } from './firebase-admin';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, Timestamp } from 'firebase/firestore';
+import { db } from './firebase'; // Usando a instância do cliente
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import type { ProductName } from './types';
 
+// Validação dos dados do produto continua a mesma
 const ProductSchema = z.object({
   nome: z.string().trim().min(1, 'O nome do produto é obrigatório'),
   lote: z.string().trim().min(1, 'O número do lote é obrigatório'),
@@ -22,38 +22,39 @@ const UpdateProductSchema = ProductSchema.extend({
   id: z.string().min(1, { message: 'Product ID is required' }),
 });
 
-
+// Garante que o nome do produto exista na coleção de nomes
+// Agora usa o SDK do cliente
 async function ensureProductNameExists(productName: string) {
-    const adminDb = getAdminDb();
     const trimmedName = productName.trim();
     if (!trimmedName) return;
 
-    const productNamesRef = adminDb.collection('nomesDeProdutos');
-    const q = productNamesRef.where('nome', '==', trimmedName);
-    const querySnapshot = await q.get();
+    const productNamesRef = collection(db, 'nomesDeProdutos');
+    const q = query(productNamesRef, where('nome', '==', trimmedName));
+    const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
-        const newNameRef = adminDb.collection('nomesDeProdutos').doc();
-        await newNameRef.set({ nome: trimmedName, criadoEm: Timestamp.now() });
+        await addDoc(collection(db, 'nomesDeProdutos'), {
+            nome: trimmedName,
+            criadoEm: Timestamp.now()
+        });
     }
 }
 
+// Busca os nomes de produtos existentes
+// Agora usa o SDK do cliente
 export async function getProductNames(): Promise<ProductName[]> {
-    const adminDb = getAdminDb();
-    const productNamesRef = adminDb.collection('nomesDeProdutos');
-    const q = productNamesRef.orderBy('nome', 'asc');
-    const querySnapshot = await q.get();
+    const productNamesRef = collection(db, 'nomesDeProdutos');
+    const q = query(productNamesRef, orderBy('nome', 'asc'));
+    const querySnapshot = await getDocs(q);
     
-    // CORREÇÃO: Retorna apenas os campos necessários (id e nome) para evitar erros de serialização.
-    return querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return { 
-            id: doc.id, 
-            nome: data.nome 
-        };
-    });
+    return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        nome: doc.data().nome
+    }));
 }
 
+// Adiciona um novo produto
+// Modificado para ser chamado pelo cliente, mas a lógica central permanece
 export async function addProductAction(productData: {
   nome: string;
   lote: string;
@@ -61,8 +62,6 @@ export async function addProductAction(productData: {
   fotoEtiquetaUrl: string;
   categoria?: string;
 }) {
-  const adminDb = getAdminDb();
-  
   const validatedFields = ProductSchema.safeParse(productData);
 
   if (!validatedFields.success) {
@@ -79,7 +78,7 @@ export async function addProductAction(productData: {
     const [year, month, day] = validade.split('-').map(Number);
     const validadeDate = new Date(Date.UTC(year, month - 1, day, 12));
     
-    await adminDb.collection('produtos').add({
+    await addDoc(collection(db, 'produtos'), {
       nome,
       lote,
       validade: Timestamp.fromDate(validadeDate),
@@ -99,6 +98,8 @@ export async function addProductAction(productData: {
   revalidatePath('/reports');
 }
 
+
+// Atualiza um produto existente
 export async function updateProductAction(productData: {
     id: string;
     nome: string;
@@ -107,8 +108,6 @@ export async function updateProductAction(productData: {
     fotoEtiquetaUrl: string;
     categoria?: string;
 }) {
-    const adminDb = getAdminDb();
-    
     const validatedFields = UpdateProductSchema.safeParse(productData);
 
     if (!validatedFields.success) {
@@ -122,12 +121,12 @@ export async function updateProductAction(productData: {
     try {
         await ensureProductNameExists(nome);
         
-        const productRef = adminDb.collection('produtos').doc(id);
+        const productRef = doc(db, 'produtos', id);
         
         const [year, month, day] = validade.split('-').map(Number);
         const validadeDate = new Date(Date.UTC(year, month - 1, day, 12));
         
-        await productRef.update({
+        await updateDoc(productRef, {
             nome,
             lote,
             validade: Timestamp.fromDate(validadeDate),
@@ -148,16 +147,15 @@ export async function updateProductAction(productData: {
 }
 
 
+// Deleta um produto
 export async function deleteProductAction(productId: string) {
-  const adminDb = getAdminDb();
-
   if (!productId) {
     throw new Error('ID do produto não fornecido.');
   }
 
   try {
-    const productRef = adminDb.collection('produtos').doc(productId);
-    await productRef.delete();
+    const productRef = doc(db, 'produtos', productId);
+    await deleteDoc(productRef);
 
     revalidatePath('/dashboard');
     revalidatePath('/notifications');

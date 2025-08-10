@@ -23,12 +23,6 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
-       {
-        protocol: 'https',
-        hostname: 'valicare-xlbs5.firebasestorage.app',
-        port: '',
-        pathname: '/**',
-      },
     ],
   },
 };

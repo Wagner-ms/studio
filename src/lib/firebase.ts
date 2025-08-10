@@ -1,6 +1,6 @@
 
 import { getApp, getApps, initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, Timestamp } from 'firebase/firestore'; // Import Timestamp
 import { getStorage } from 'firebase/storage';
 
 // Configuração do Firebase para o lado do cliente (navegador)
@@ -19,4 +19,4 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-export { app, db, storage };
+export { app, db, storage, Timestamp };
