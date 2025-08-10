@@ -2,6 +2,12 @@
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { getStorage, Storage } from 'firebase-admin/storage';
+import * as dotenv from 'dotenv';
+import path from 'path';
+
+// Carrega as variáveis de ambiente do arquivo src/.env
+dotenv.config({ path: path.resolve(process.cwd(), 'src', '.env') });
+
 
 interface AdminInstances {
   app: App;
@@ -49,6 +55,7 @@ export function getAdminDb(): Firestore {
     const { db } = initializeAdminApp();
     return db;
   } catch (error) {
+    console.error("Firebase Admin Initialization Error:", error);
     // Lançamos um novo erro para garantir que a mensagem seja clara
     // caso a inicialização falhe por falta de credenciais.
     throw new Error('A conexão com o servidor não pôde ser inicializada. Verifique as variáveis de ambiente.');
