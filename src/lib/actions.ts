@@ -34,32 +34,23 @@ async function ensureProductNameExists(productName: string) {
 
     if (querySnapshot.empty) {
         const newNameRef = adminDb.collection('nomesDeProdutos').doc();
-        await newNameRef.set({ nome: trimmedName });
+        await newNameRef.set({ nome: trimmedName, criadoEm: Timestamp.now() });
     }
 }
 
 export async function getProductNames(): Promise<ProductName[]> {
-    try {
-        const adminDb = getAdminDb();
-        const productNamesRef = adminDb.collection('nomesDeProdutos');
-        const q = productNamesRef.orderBy('nome', 'asc');
-        const querySnapshot = await q.get();
-        
-        // CORREÇÃO: Retorna apenas os campos necessários (id e nome) para evitar erros de serialização.
-        return querySnapshot.docs.map(doc => {
-            return { 
-                id: doc.id, 
-                nome: doc.data().nome 
-            } as ProductName;
-        });
-    } catch (error) {
-        console.error("Error fetching product names:", error);
-        // O erro original da inicialização será propagado se for o caso
-        if (error instanceof Error && error.message.includes('A conexão com o servidor')) {
-            throw error;
-        }
-        throw new Error("Não foi possível buscar os nomes dos produtos.");
-    }
+    const adminDb = getAdminDb();
+    const productNamesRef = adminDb.collection('nomesDeProdutos');
+    const q = productNamesRef.orderBy('nome', 'asc');
+    const querySnapshot = await q.get();
+    
+    // CORREÇÃO: Retorna apenas os campos necessários (id e nome) para evitar erros de serialização.
+    return querySnapshot.docs.map(doc => {
+        return { 
+            id: doc.id, 
+            nome: doc.data().nome 
+        } as ProductName;
+    });
 }
 
 export async function addProductAction(productData: {
