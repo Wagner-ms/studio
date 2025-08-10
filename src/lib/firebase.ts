@@ -4,15 +4,15 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 // Configuração do Firebase para o lado do cliente (navegador)
-// Essas variáveis são carregadas do arquivo .env e têm o prefixo NEXT_PUBLIC_
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyC-F57AO7k7POSp3GgJDh6XTdPw856Oi1k",
+  authDomain: "valicare-xlbs5.firebaseapp.com",
+  projectId: "valicare-xlbs5",
+  storageBucket: "valicare-xlbs5.appspot.com",
+  messagingSenderId: "440228841299",
+  appId: "1:440228841299:web:ed3637d8af7fc48b3443a6"
 };
+
 
 // Inicializa o Firebase apenas uma vez
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
