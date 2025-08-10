@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { Timestamp } from 'firebase-admin/firestore';
-import { adminDb } from './firebase-admin';
+import { getAdminDb } from './firebase-admin';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import type { ProductName } from './types';
@@ -24,7 +24,7 @@ const UpdateProductSchema = ProductSchema.extend({
 
 
 async function ensureProductNameExists(productName: string) {
-    if (!adminDb) throw new Error("A conexão com o servidor não foi inicializada.");
+    const adminDb = getAdminDb();
     const trimmedName = productName.trim();
     if (!trimmedName) return;
 
@@ -39,11 +39,8 @@ async function ensureProductNameExists(productName: string) {
 }
 
 export async function getProductNames(): Promise<ProductName[]> {
-    if (!adminDb) {
-      console.error("getProductNames: Firebase Admin not initialized or missing credentials.");
-      throw new Error("A conexão com o servidor não foi inicializada.");
-    };
     try {
+        const adminDb = getAdminDb();
         const productNamesRef = adminDb.collection('nomesDeProdutos');
         const q = productNamesRef.orderBy('nome', 'asc');
         const querySnapshot = await q.get();
@@ -57,6 +54,10 @@ export async function getProductNames(): Promise<ProductName[]> {
         });
     } catch (error) {
         console.error("Error fetching product names:", error);
+        // O erro original da inicialização será propagado se for o caso
+        if (error instanceof Error && error.message.includes('A conexão com o servidor')) {
+            throw error;
+        }
         throw new Error("Não foi possível buscar os nomes dos produtos.");
     }
 }
@@ -68,9 +69,7 @@ export async function addProductAction(productData: {
   fotoEtiquetaUrl: string;
   categoria?: string;
 }) {
-  if (!adminDb) {
-    throw new Error("Falha na conexão com o servidor. Verifique as credenciais do Firebase Admin.");
-  }
+  const adminDb = getAdminDb();
   
   const validatedFields = ProductSchema.safeParse(productData);
 
@@ -116,9 +115,7 @@ export async function updateProductAction(productData: {
     fotoEtiquetaUrl: string;
     categoria?: string;
 }) {
-    if (!adminDb) {
-        throw new Error("Falha na conexão com o servidor. Verifique as credenciais do Firebase Admin.");
-    }
+    const adminDb = getAdminDb();
     
     const validatedFields = UpdateProductSchema.safeParse(productData);
 
@@ -160,9 +157,7 @@ export async function updateProductAction(productData: {
 
 
 export async function deleteProductAction(productId: string) {
-  if (!adminDb) {
-    throw new Error('Falha na conexão com o servidor. Verifique as credenciais do Firebase Admin.');
-  }
+  const adminDb = getAdminDb();
 
   if (!productId) {
     throw new Error('ID do produto não fornecido.');

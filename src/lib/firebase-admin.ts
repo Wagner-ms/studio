@@ -3,66 +3,59 @@ import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { getStorage, Storage } from 'firebase-admin/storage';
 
-// Define the service account object structure.
-interface ServiceAccount {
-  projectId: string;
-  clientEmail: string;
-  privateKey: string;
+interface AdminInstances {
+  app: App;
+  db: Firestore;
+  storage: Storage;
 }
 
-// Prepare the service account credentials from environment variables.
-const serviceAccountKey = process.env.FIREBASE_PRIVATE_KEY;
-const hasCredentials = 
+let adminInstances: AdminInstances | null = null;
+
+function initializeAdminApp(): AdminInstances {
+  if (adminInstances) {
+    return adminInstances;
+  }
+
+  const serviceAccountKey = process.env.FIREBASE_PRIVATE_KEY;
+  const hasCredentials =
     process.env.FIREBASE_PROJECT_ID &&
     process.env.FIREBASE_CLIENT_EMAIL &&
     serviceAccountKey;
 
-let serviceAccount: ServiceAccount | undefined;
+  if (!hasCredentials) {
+    throw new Error('As credenciais do Firebase Admin não estão configuradas no ambiente do servidor.');
+  }
 
-if (hasCredentials) {
-  serviceAccount = {
+  const serviceAccount = {
     projectId: process.env.FIREBASE_PROJECT_ID!,
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-    // Replace escaped newlines for the private key.
     privateKey: serviceAccountKey!.replace(/\\n/g, '\n'),
   };
+
+  const app = getApps().length > 0 ? getApps()[0] : initializeApp({
+    credential: cert(serviceAccount),
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  });
+
+  const db = getFirestore(app);
+  const storage = getStorage(app);
+
+  adminInstances = { app, db, storage };
+  return adminInstances;
 }
 
-// Initialize the Firebase Admin SDK.
-// This simplified approach ensures the app is initialized only once.
-let adminApp: App;
-let adminDb: Firestore;
-let adminStorage: Storage;
-
-if (getApps().length === 0) {
-  if (serviceAccount) {
-    adminApp = initializeApp({
-      credential: cert(serviceAccount),
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    });
-  } else {
-    // In a real-world scenario, you might want to handle this case differently,
-    // but for this context, we will mock a simple app if credentials are not present.
-    // This avoids crashing the server on startup if env vars are missing.
-    console.warn('Firebase Admin credentials are not available. Server-side Firebase features will be disabled.');
-    adminApp = initializeApp(); // Initialize without credentials
+export function getAdminDb(): Firestore {
+  try {
+    const { db } = initializeAdminApp();
+    return db;
+  } catch (error) {
+    // Lançamos um novo erro para garantir que a mensagem seja clara
+    // caso a inicialização falhe por falta de credenciais.
+    throw new Error('A conexão com o servidor não pôde ser inicializada. Verifique as variáveis de ambiente.');
   }
-} else {
-  adminApp = getApps()[0];
 }
 
-// Export Firestore and Storage instances.
-// Assign them only if the app was initialized with credentials.
-if (serviceAccount) {
-  adminDb = getFirestore(adminApp);
-  adminStorage = getStorage(adminApp);
-} else {
-  // To prevent runtime errors, we assign null if not properly initialized.
-  // The actions will then handle this case gracefully.
-  // @ts-ignore
-  adminDb = null;
-  // @ts-ignore
-  adminStorage = null;
+export function getAdminStorage(): Storage {
+  const { storage } = initializeAdminApp();
+  return storage;
 }
-
-export { adminDb, adminStorage };
