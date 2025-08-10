@@ -47,7 +47,9 @@ export async function getProductNames(): Promise<ProductName[]> {
         const productNamesRef = adminDb.collection('nomesDeProdutos');
         const q = productNamesRef.orderBy('nome', 'asc');
         const querySnapshot = await q.get();
-        // Retorna apenas 'id' e 'nome', que são serializáveis e necessários pelo cliente.
+        
+        // CORREÇÃO: Mapeia os documentos para retornar apenas os campos serializáveis
+        // necessários pelo cliente (id e nome), descartando o Timestamp 'criadoEm'.
         return querySnapshot.docs.map(doc => {
             const data = doc.data();
             return { 
@@ -185,5 +187,3 @@ export async function deleteProductAction(productId: string) {
     throw new Error(errorMessage);
   }
 }
-
-    
