@@ -34,13 +34,13 @@ async function ensureProductNameExists(productName: string) {
 
     if (querySnapshot.empty) {
         const newNameRef = adminDb.collection('nomesDeProdutos').doc();
-        await newNameRef.set({ nome: trimmedName, criadoEm: Timestamp.now() });
+        await newNameRef.set({ nome: trimmedName });
     }
 }
 
 export async function getProductNames(): Promise<ProductName[]> {
     if (!adminDb) {
-      console.error("getProductNames: Firebase Admin not initialized");
+      console.error("getProductNames: Firebase Admin not initialized or missing credentials.");
       throw new Error("A conexão com o servidor não foi inicializada.");
     };
     try {
