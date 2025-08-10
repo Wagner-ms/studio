@@ -46,10 +46,11 @@ export async function getProductNames(): Promise<ProductName[]> {
     
     // CORREÇÃO: Retorna apenas os campos necessários (id e nome) para evitar erros de serialização.
     return querySnapshot.docs.map(doc => {
+        const data = doc.data();
         return { 
             id: doc.id, 
-            nome: doc.data().nome 
-        } as ProductName;
+            nome: data.nome 
+        };
     });
 }
 
