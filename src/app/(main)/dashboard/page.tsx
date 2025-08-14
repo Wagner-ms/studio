@@ -8,18 +8,20 @@ import { Button } from '@/components/ui/button';
 import { ProductCard, ProductCardSkeleton } from '@/components/product-card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowDownAZ, CalendarClock, Clock, PlusCircle, Search } from 'lucide-react';
+import { ArrowDownAZ, CalendarClock, Clock, Folder, PlusCircle, Search } from 'lucide-react';
 import { getExpirationStatus } from '@/lib/utils';
 import type { ExpirationStatus } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Product } from '@/lib/types';
 
+const productCategories = ['Cam.Bebidas', 'cam.laticinios', 'cam.congelados', 'cam.sorvete', 'Cam.Fiambra'];
 
 export default function DashboardPage() {
   const { products, loading, safeCount, expiringSoonCount, expiringIn7DaysCount, expiringIn3DaysCount, expiredCount } = useProducts();
   const [searchQuery, setSearchQuery] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState<ExpirationStatus | 'all'>('all');
   const [sortOrder, setSortOrder] = React.useState<keyof Product | 'nome'>('validade');
+  const [categoryFilter, setCategoryFilter] = React.useState('all');
 
 
   const sortedAndFilteredProducts = React.useMemo(() => {
@@ -27,6 +29,13 @@ export default function DashboardPage() {
       .filter((product) => {
         // Filter by search query (product name)
         return product.nome.toLowerCase().includes(searchQuery.toLowerCase());
+      })
+       .filter((product) => {
+        // Filter by category
+        if (categoryFilter === 'all') {
+          return true;
+        }
+        return product.categoria === categoryFilter;
       })
       .filter((product) => {
         // Filter by status
@@ -47,7 +56,7 @@ export default function DashboardPage() {
         }
         return 0;
       });
-  }, [products, searchQuery, statusFilter, sortOrder]);
+  }, [products, searchQuery, statusFilter, sortOrder, categoryFilter]);
   
   const statusCounts = {
     all: products.length,
@@ -83,6 +92,28 @@ export default function DashboardPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-full md:w-[240px]">
+                <SelectValue placeholder="Filtrar por categoria..." />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="all">
+                    <div className='flex items-center gap-2'>
+                        <Folder className="h-4 w-4" />
+                        <span>Todas as Categorias</span>
+                    </div>
+                </SelectItem>
+                {productCategories.map(category => (
+                    <SelectItem key={category} value={category}>
+                        <div className='flex items-center gap-2'>
+                            <span>{category}</span>
+                        </div>
+                    </SelectItem>
+                ))}
+            </SelectContent>
+        </Select>
+
          <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as any)}>
             <SelectTrigger className="w-full md:w-[200px]">
                 <SelectValue placeholder="Ordenar por..." />
@@ -132,7 +163,7 @@ export default function DashboardPage() {
         <div className="flex flex-col items-center justify-center text-center py-20 border-2 border-dashed rounded-lg">
           <h2 className="text-2xl font-semibold font-headline">Nenhum Produto Encontrado</h2>
           <p className="text-muted-foreground mt-2 mb-6">
-            {searchQuery || statusFilter !== 'all' 
+            {searchQuery || statusFilter !== 'all' || categoryFilter !== 'all'
              ? "Tente ajustar sua busca ou filtros."
              : "Comece adicionando seu primeiro produto."
             }
